@@ -1,0 +1,175 @@
+
+\documentclass[pdftex,hyperref]{beamer}
+
+
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+
+%\usepackage{cite}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{amssymb}
+\usepackage{colortbl}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{bibentry}
+\usepackage{listings}
+\usepackage{tabularx}
+
+
+
+% Configuracion del documento PDF.
+\hypersetup{
+  pdfcreator=Jesús López González,
+  backref,
+  pdfpagemode=FullScreen
+}
+
+
+
+
+
+% Configuracion pagina principal
+
+\title{\textbf{Programación Funcional en Scala}}
+\subtitle{\textbf{ -- Tema 0 -- \\ Introducción y Objetivos del Curso}}
+\author[Jesús López González]{Jesús López González\\jesus.lopez@hablapps.com}
+\institute[@jeslg]{Programación Funcional en Scala\\ Habla Computing}
+\date{Cursos ETSII-URJC 2015}
+
+
+
+
+% Eleccion estilo de la presentacion
+
+\mode<presentation>
+{
+ \usetheme{Madrid}
+% \usetheme{Antibes}
+ \setbeamercovered{transparent}
+}
+
+
+\def\newblock{\hskip .11em plus .33em minus .07em}
+
+
+% Configuracion del logo de la imagen
+
+\subject{Talks}
+
+\pgfdeclareimage[height=0.5cm]{university-logo}{images/logoURJC}
+\logo{\pgfuseimage{university-logo}}
+
+
+\setcounter{tocdepth}{1}
+
+%NOANIMACION
+\beamerdefaultoverlayspecification{}
+
+% Volver a recordar tabla de contenidos en subsecciones
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>{Índice}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\nobibliography* 
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\section{Presentación} 
+
+\begin{frame}  
+  \begin{block}{Presentación}
+    Jesús López González
+    \begin{itemize}
+    \item Correo-e: \href{mailto:jesus.lopez@hablapps.com}{jesus.lopez@hablapps.com}
+    \item Twitter: \href{http://twitter.com/jeslg}{@jeslg}
+    \item \href{http://hablapps.com}{Habla Computing}
+    \item \href{http://www.meetup.com/Scala-Programming-Madrid/}{Scala Programming @ Madrid}
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\section{Información del Curso} 
+
+\begin{frame}  
+  \begin{block}{Información del Curso}
+    Programación Funcional en Scala
+    \begin{itemize}
+    \item Horario: \alert{L-X-V} (17h-20h)
+    \item Fechas: 9, 11, 16, 18, 23, 25, 27 de marzo, 8, 10 y 13 de abril
+    \item Duración: 30 horas
+    \item Créditos: 1.5 créditos ECTS
+    \item Repositorio Oficial:
+      \href{http://github.com/hablapps/training/}{http://github.com/hablapps/training/}
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\section{Temario}
+
+\begin{frame}  
+  \begin{block}{Temario}
+    Programación Funcional en Scala
+    \begin{itemize}
+    \item[T1] Introducción a Scala (9 de marzo)
+    \item[T2] Introducción a la Programación Funcional (11 y 16 de marzo)
+    \item[T3] Constructores de Tipos, Type Classes y Funtores (18 de marzo)
+    \item[T4] ¡No tengas miedo de las mónadas! (23 y 25 de marzo)
+    \item[T5] Efectos, EDSLs e Intérpretación (27 de marzo)
+    \item[T6] Introducción a Play (8 de abril)
+    \item[T7] Desplegando Servicios en Play (10 de abril)
+    \item[Fin] \emph{Scala @ Real Life} (13 de abril)
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\section{Objetivos}
+
+\begin{frame}  
+  \begin{block}{Objetivos Principales}
+    \begin{itemize}
+    \item Entender los fundamentos del paradigma de la Programación Funcional
+    \item Identificar y erradicar los \alert{efectos de lado} de un programa
+    \item Aplicar la separación de aspectos: efectos e interpretación
+    \end{itemize}
+  \end{block}
+  \begin{block}{Y de forma indirecta...}
+    \begin{itemize}
+    \item Aprender los fundamentos de la programación en \emph{Scala}
+    \item Poder desenvolverse en el ecosistema Scala (REPL, SBT, ScalaTest...)
+    \item Conocer las nociones básicas del framework web \emph{Play}
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\section{Referencias}
+\begin{frame}  
+  \begin{block}{Referencias}
+    \begin{itemize}
+    \item Chiusano, P. y Bjarnason, R. (2014) \emph{Functional Programming in Scala}
+    \item Lipovaca, M. (2011) \emph{Learn You a Haskell for Great Good!}
+    \item Odersky, M. (2011) \emph{Programming in Scala, 2nd Edition}
+    \item González, G. \href{http://www.haskellforall.com}{\emph{Haskell For All}} (blog)
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+
+\end{document}
+
+
+
+
+
