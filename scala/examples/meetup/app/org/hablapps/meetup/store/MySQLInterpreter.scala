@@ -4,79 +4,87 @@ import scala.reflect.{ClassTag, classTag}
 import scala.slick.driver.MySQLDriver.simple._
 import scala.slick.lifted.CompiledFunction
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException
-import scalaz.{\/, -\/, \/-}
+import scalaz.{\/, -\/, \/-, ~>, Free}
 
 import play.api.db.slick.DB
 import play.api.Play.current
 
 import org.hablapps.meetup.domain._
+import Store._
+import StoreOp._
 
 object MySQLInterpreter{
 
-  def run[U](store: Store[U]): StoreError \/ U = store match {
-    case Return(result) => 
-      \/-(result)
-    case Fail(error) => 
-      -\/(error)
-    case GetGroup(id: Int, next: (Group => Store[U])) => 
-      DB.withSession { implicit session =>
-        group_table.byID(Some(id)).firstOption.fold[StoreError \/ U](
-          -\/(NonExistentEntity(id))
-        ){
-          entity => run(next(entity))
-        }
+  type MyType[A] = \/[StoreError, A]
+
+  val toMySQL: StoreOp ~> MyType =
+    new (StoreOp ~> MyType) {
+      def apply[A](fa: StoreOp[A]) = fa match {
+        case Fail(error) =>
+          -\/(error)
+        case GetGroup(id) =>
+          DB.withSession { implicit session =>
+            group_table.byID(Some(id)).firstOption.fold[StoreError \/ A](
+              -\/(NonExistentEntity(id))
+            ){
+              entity => \/-(entity)
+            }
+          }
+        case GetUser(id) =>
+          DB.withSession { implicit session =>
+            user_table.byID(Some(id)).firstOption.fold[StoreError \/ A](
+              -\/(NonExistentEntity(id))
+            ){
+              entity => \/-(entity)
+            }
+          }
+        case IsMember(uid, gid) => 
+          DB.withSession { implicit session =>
+            val isMemberQuery = for {
+              member <- member_table if member.uid === uid && member.gid === gid
+            } yield member
+            \/-(isMemberQuery.firstOption.isDefined)
+          }
+        case IsPending(uid, gid) =>
+          DB.withSession { implicit session =>
+            val isPendingQuery = for {
+              join <- join_table if join.uid === uid && join.gid === gid
+            } yield join
+            \/-(isPendingQuery.firstOption.isDefined)
+          }
+        case PutMember(member) =>
+          DB.withSession { implicit session =>
+            val mid: StoreError \/ Int = try {
+              val maybeId = member_table returning member_table.map(_.mid) += member
+              maybeId.fold[StoreError \/ Int](-\/(GenericError(s"Could not put new member $member")))(\/-(_))
+            } catch {
+              case e : MySQLIntegrityConstraintViolationException =>
+                -\/(ConstraintFailed(StoreOp.IsMember(member.uid, member.gid)))
+            }
+            mid.map(id => member.copy(mid = Some(id)))
+          }
+        case PutJoin(join: JoinRequest) => 
+          DB.withSession { implicit session =>
+            val jid: StoreError \/ Int = try{
+              val maybeId = join_table returning join_table.map(_.jid) += join
+              maybeId.fold[StoreError \/ Int](
+                -\/(GenericError(s"Could not put new join $join")))(
+                \/-(_)
+              )
+            } catch {
+              case e : MySQLIntegrityConstraintViolationException => 
+                -\/(GenericError(s"Constraint violation: $e"))
+            }
+            jid.map(id => join.copy(jid = Some(id)))
+          }
       }
-    case GetUser(id: Int, next: (User => Store[U])) => 
-      DB.withSession { implicit session =>
-        user_table.byID(Some(id)).firstOption.fold[StoreError \/ U](
-          -\/(NonExistentEntity(id))
-        ){
-          entity => run(next(entity))
-        }
-      }
-    case IsMember(uid, gid, next) => 
-      DB.withSession { implicit session =>
-        val isMemberQuery = for{
-          member <- member_table if member.uid === uid && member.gid === gid
-        } yield member
-        run(next(isMemberQuery.firstOption.isDefined))
-      }
-    case IsPending(uid, gid, next) => 
-      DB.withSession { implicit session =>
-        val isPendingQuery = for{
-          join <- join_table if join.uid === uid && join.gid === gid
-        } yield join
-        run(next(isPendingQuery.firstOption.isDefined))
-      }
-    case PutMember(member: Member, next: (Member => Store[U])) => 
-      DB.withSession { implicit session =>
-        val mid: StoreError \/ Int = try{
-          val maybeId = member_table returning member_table.map(_.mid) += member
-          maybeId.fold[StoreError \/ Int](-\/(GenericError(s"Could not put new member $member")))(\/-(_))
-        } catch {
-          case e : MySQLIntegrityConstraintViolationException => 
-            -\/(ConstraintFailed(Store.isMember(member.uid, member.gid)))
-        }
-        mid.map(id => run(next(member.copy(mid = Some(id)))))
-          .flatMap(a => a)
-      }
-    case PutJoin(join: JoinRequest, next: (JoinRequest => Store[U])) => 
-      DB.withSession { implicit session =>
-        val jid: StoreError \/ Int = try{
-          val maybeId = join_table returning join_table.map(_.jid) += join
-          maybeId.fold[StoreError \/ Int](
-            -\/(GenericError(s"Could not put new join $join")))(
-            \/-(_)
-          )
-        } catch {
-          case e : MySQLIntegrityConstraintViolationException => 
-            -\/(GenericError(s"Constraint violation: $e"))
-        }
-        jid.map(id => run(next(join.copy(jid = Some(id)))))
-          .flatMap(a => a)
-      }
-    case _ => 
-      -\/(new StoreError("unevaluated yet"))
+    }
+
+  def runStoreMySQL[A](program: Store[A]): MyType[A] =
+    Free.runFC[StoreOp, MyType, A](program)(toMySQL)
+
+  implicit class StateOps[A](ma: Store[A]) {
+    def exec(): MyType[A] = runStoreMySQL(ma)
   }
 
   class GroupTable(tag: Tag) extends Table[Group](tag, "Groups") {

@@ -13,8 +13,10 @@ import org.hablapps.meetup.{domain, db, logic},
   domain._
 
 object Members extends Controller{
+  import Store._
+  import StoreOp._
 
-  def add(gid: Int): Action[Int] =
+  def add(gid: Int) =
     Action(parse.json[Int]) { 
       fromHTTP(gid) andThen 
       join          andThen
@@ -23,7 +25,7 @@ object Members extends Controller{
     }
   
   def interpreter[U]: Store[U] => \/[StoreError, U] = 
-    MySQLInterpreter.run[U]
+    MySQLInterpreter.runStoreMySQL[U]
     // MapInterpreter.output[U](MapInterpreter.MapStore())
   
   def fromHTTP(gid: Int): Request[Int] => JoinRequest = 
@@ -35,9 +37,9 @@ object Members extends Controller{
       error => error match {
         case error@NonExistentEntity(id) => 
           NotFound(s"${error.msg}")
-        case error@ConstraintFailed(IsMember(_,_,_)) => 
+        case error@ConstraintFailed(IsMember(_,_)) => 
           Forbidden(s"${error.msg}")
-        case error@ConstraintFailed(IsPending(_,_,_)) => 
+        case error@ConstraintFailed(IsPending(_,_)) => 
           Forbidden(s"${error.msg}")
         case error => 
           InternalServerError(error.msg)

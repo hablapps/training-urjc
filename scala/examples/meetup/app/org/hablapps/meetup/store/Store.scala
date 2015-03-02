@@ -1,29 +1,34 @@
 package org.hablapps.meetup.db
 
 import scala.reflect.{ClassTag, classTag}
-import scalaz.{\/, -\/, \/-}
+import scalaz.{\/, -\/, \/-, Free, Monad, Coyoneda}
 
 import org.hablapps.meetup.domain._
 
-sealed trait Store[+U]
+sealed trait StoreOp[+A]
 
-case class GetGroup[U](id: Int, next: Group => Store[U]) extends Store[U]
-case class GetUser[U](id: Int, next: User => Store[U]) extends Store[U]
-case class IsMember[U](uid: Int, gid: Int, next: Boolean => Store[U]) extends Store[U]
-case class IsPending[U](uid: Int, gid: Int, next: Boolean => Store[U]) extends Store[U]
-case class PutJoin[U](join: JoinRequest, next: JoinRequest => Store[U]) extends Store[U]
-case class PutMember[U](id: Member, next: Member => Store[U]) extends Store[U]
-case class Return[U](t: U) extends Store[U]
-case class Fail(error: StoreError) extends Store[Nothing]
+object StoreOp {
+  case class GetGroup(id: Int) extends StoreOp[Group]
+  case class GetUser(id: Int) extends StoreOp[User]
+  case class IsMember(uid: Int, gid: Int) extends StoreOp[Boolean]
+  case class IsPending(uid: Int, gid: Int) extends StoreOp[Boolean]
+  case class PutJoin(join: JoinRequest) extends StoreOp[JoinRequest]
+  case class PutMember(member: Member) extends StoreOp[Member]
+  case class Fail(error: StoreError) extends StoreOp[Nothing]
+}
 
 sealed class StoreError(val msg: String)
 
 case class NonExistentEntity(id: Int) extends StoreError(s"Non-existent entity $id")
-case class ConstraintFailed(constraint: Store[Boolean]) extends StoreError(s"Constraint failed: $constraint")
+case class ConstraintFailed(constraint: StoreOp[Boolean]) extends StoreError(s"Constraint failed: $constraint")
 case class GenericError(override val msg: String) extends StoreError(msg)
 
   
-object Store{
+object Store {
+
+  type Store[A] = Free.FreeC[StoreOp, A]
+  implicit val MonadStore: Monad[Store] =
+    Free.freeMonad[({type f[x] = Coyoneda[StoreOp, x]})#f]
   
   def cond[U,V](f: => Boolean, `then`: Store[V], `else`: Store[U]): Store[U \/ V] =
     if (f) 
@@ -31,52 +36,30 @@ object Store{
     else
       `else` map (v => -\/(v))
 
-  def getGroup(id: Int): GetGroup[Group] = 
-    GetGroup(id, t => Return(t))
+  def getGroup(id: Int) =
+    Free.liftFC(StoreOp.GetGroup(id))
   
-  def getUser(id: Int): GetUser[User] =  
-    GetUser(id, t => Return(t))
+  def getUser(id: Int) =
+    Free.liftFC(StoreOp.GetUser(id))
 
-  def putJoin(t: JoinRequest): PutJoin[JoinRequest] = 
-    PutJoin(t, t1 => Return(t1))
+  def putJoin(t: JoinRequest) =
+    Free.liftFC(StoreOp.PutJoin(t))
 
-  def putMember(t: Member): PutMember[Member] = 
-    PutMember(t, t1 => Return(t1))
+  def putMember(t: Member) =
+    Free.liftFC(StoreOp.PutMember(t))
 
-  def isMember(uid: Int, gid: Int): IsMember[Boolean] = 
-    IsMember(uid, gid, Return(_))
+  def isMember(uid: Int, gid: Int) =
+    Free.liftFC(StoreOp.IsMember(uid, gid))
 
-  def isPending(uid: Int, gid: Int): IsPending[Boolean] = 
-    IsPending(uid, gid, Return(_))
+  def isPending(uid: Int, gid: Int) =
+    Free.liftFC(StoreOp.IsPending(uid, gid))
 
   implicit class StoreOps[U](store: Store[U]){
 
-    def flatMap[V](f: U => Store[V]): Store[V] = store match {
-      case GetUser(id, next) => GetUser(id, next andThen (_ flatMap f))
-      case GetGroup(id, next) => GetGroup(id, next andThen (_ flatMap f))
-      case IsMember(uid, gid, next) => IsMember(uid, gid, next andThen (_ flatMap f))
-      case IsPending(uid, gid, next) => IsPending(uid, gid, next andThen (_ flatMap f))
-      case PutJoin(t, next) => PutJoin(t, next andThen (_ flatMap f))
-      case PutMember(t, next) => PutMember(t, next andThen (_ flatMap f))
-      case Return(t) => f(t)
-      case fail@Fail(_) => fail 
-    }
-
-    def map[V](f: U => V): Store[V] = store match {
-      case GetUser(id, next) => GetUser(id, next andThen (_ map f))
-      case GetGroup(id, next) => GetGroup(id, next andThen (_ map f))
-      case IsMember(uid, gid, next) => IsMember(uid, gid, next andThen (_ map f))
-      case IsPending(uid, gid, next) => IsPending(uid, gid, next andThen (_ map f))
-      case PutJoin(t, next) => PutJoin(t, next andThen (_ map f))
-      case PutMember(t, next) => PutMember(t, next andThen (_ map f))
-      case Return(t) => Return(f(t)) 
-      case fail@Fail(_) => fail
-    }
-
-    def unless(violation: Store[Boolean]): Store[U] = 
-      violation flatMap {
+    def unless(violation: StoreOp[Boolean]): Store[U] = 
+      Free.liftFC(violation) flatMap {
         violated => if (violated)
-          Fail(ConstraintFailed(violation))
+          Free.liftFC(StoreOp.Fail(ConstraintFailed(violation)))
         else 
           store
       }
@@ -84,11 +67,9 @@ object Store{
     def ||(cond2: Store[Boolean])(implicit e: U=:=Boolean): Store[Boolean] = 
       store flatMap {
         bool1 => 
-          if (bool1) Return(true)
+          if (bool1) MonadStore.point(true)
           else cond2
       }
   }
-
-
 
 }

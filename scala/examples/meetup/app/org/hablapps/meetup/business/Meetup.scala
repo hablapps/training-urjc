@@ -4,7 +4,9 @@ import scalaz.\/
 
 package object logic{
   import db.Store
+  import db.StoreOp
   import domain._
+  import Store._
 
   def join(request: JoinRequest): Store[JoinRequest \/ Member] = {
     val JoinRequest(_, uid, gid) = request
@@ -15,8 +17,8 @@ package object logic{
         !group.must_approve,
         Store.putMember(Member(None, uid, gid)), 
         Store.putJoin(request) 
-          unless Store.isPending(uid, gid)
-      ) unless Store.isMember(uid, gid)
+          unless StoreOp.IsPending(uid, gid)
+      ) unless StoreOp.IsMember(uid, gid)
     } yield memberOrRequest
   }
 
