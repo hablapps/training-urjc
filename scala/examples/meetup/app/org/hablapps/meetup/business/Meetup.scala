@@ -9,12 +9,11 @@ package object logic{
     for{
       user <- Store.getUser(uid)
       group <- Store.getGroup(gid)
-      memberOrRequest <- Store.cond(
-        !group.must_approve,
-        Store.putMember(Member(None, uid, gid)), 
-        Store.putJoin(request) 
-          unless Store.isPending(uid, gid)
-      ) unless Store.isMember(uid, gid)
+      memberOrRequest <- 
+        Store.If(!group.must_approve)(
+          _then = Store.putMember(Member(None, uid, gid)), 
+          _else = Store.putJoin(request) unless Store.isPending(uid, gid)
+        ) unless Store.isMember(uid, gid)
     } yield memberOrRequest
   }
 

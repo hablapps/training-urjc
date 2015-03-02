@@ -1,0 +1,17 @@
+logs
+project/project
+project/target
+target
+tmp
+.history
+dist
+/*.iml
+/.classpath
+/.project
+/.idea
+/RUNNING_PID
+/.settings
+.DS_Store
+*~
+.jhw-cache
+RUNNING_PID
