@@ -274,4 +274,145 @@ object HolaMundo extends App {
 
 \section{Segundo Programa: Curso de Universidad}
 
+\begin{frame}[fragile]
+  \frametitle{Segundo Programa: Curso de Universidad}
+
+  \label{blk:configuracion-del-segundo-proyecto}
+  \begin{block}{Configuración del Proyecto}
+    \begin{enumerate}
+      \item Seguiremos los mismos pasos de configuración que se
+        utilizaron en la diapositiva
+        \ref{blk:configuracion-del-proyecto}, reemplazando las
+        referencias a \emph{hola-mundo} por \emph{gestor-alumnos}.
+      \item Este nuevo proyecto también contará con un test. Por ello,
+        será necesario indicar que existe una dependencia con
+        ScalaTest, añadiendo en el fichero
+        \emph{gestor-alumnos/build.sbt} la propiedad que aparece en
+        esta misma diapositiva\footnote{Cuando modifiquemos el fichero
+          \emph{build.sbt} será necesario reiniciar SBT o ejecutar la
+          orden \emph{reload} para cargar los nuevos cambios.}.
+    \end{enumerate}
+  \end{block}
+  \begin{lstlisting}[language=scala, caption=Dependencia a ScalaTest (build.sbt)]
+libraryDependencies += 
+  "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test"
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Segundo Programa: Curso de Universidad}
+
+  \label{blk:estructura-del-segundo-proyecto}
+  \begin{block}{Estructura del Proyecto}
+    \begin{itemize}
+    \item SBT permite mantener separados el código principal y el
+      código de pruebas. Por defecto, los fuentes principales deben
+      situarse en el directorio \emph{\$RAIZ\_PROYECTO/src/main/scala}
+      mientras que los fuentes asociados a las pruebas se mantendrán
+      en la ruta \emph{\$RAIZ\_PROYECTO/src/test/scala}.
+    \item La tarea SBT \emph{test:compile} compila los fuentes
+      correspondientes al directorio de pruebas. Por su parte, la
+      tarea \emph{test} ejecutará todos los tests que se encuentran en
+      dicha ruta. Como es evidente, la tarea \emph{test} depende de la
+      ejecución de la tarea \emph{test:compile}.
+    \item Scala, al igual que Java, también permite la organización
+      del código en paquetes. Aunque no es obligatorio, es muy
+      recomendable que cada paquete cuente con su propio
+      directorio. En este proyecto trabajaremos bajo el paquete
+      \emph{es.urjc.etsii}, es decir, nuestros ficheros Scala
+      principales estarán en
+      \emph{gestor-alumnos/src/main/scala/es/urjc/etsii}.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Segundo Programa: Curso de Universidad}
+
+  \begin{block}{Nuestra primera clase: Alumno}
+    \begin{enumerate}
+    \item Crearemos el fichero
+      \emph{gestor-alumnos/src/main/scala/es/urjc/etsii/Alumno.scala},
+      donde copiaremos el código que se encuentra en esta diapositiva.
+    \item La primera línea del snippet sirve para definir en qué
+      paquete debe quedar recogido el contenido de las declaraciones
+      de este fichero, en este caso, la clase \emph{Alumno}.
+    \item La definición de la clase incluye el constructor, la
+      definición de los atributos y la definición de los ``getters''.
+    \end{enumerate}
+  \end{block}
+
+  \label{lst:alumno-scala}
+  \begin{lstlisting}[language=scala, caption= Contenido del fichero Alumno.scala]
+package es.urjc.etsii
+
+class Alumno(val nombre: String, val apellidos: String)
+  \end{lstlisting}
+  
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Segundo Programa: Curso de Universidad}
+
+  \begin{block}{La REPL de Scala}
+    \begin{itemize}
+    \item Si ejecutamos la tarea \emph{console} desde la shell de SBT,
+      accedemos a la REPL de Scala, con los fuentes del proyecto
+      cargados.
+    \item Esta herramienta es vital en el flujo de trabajo de un
+      proyecto Scala, ya que nos permite experimentar con nuestro
+      código de forma inmediata.
+    \end{itemize}
+  \end{block}
+
+  \label{lst:repl}
+  \begin{lstlisting}[language=scala, caption=REPL de Scala]
+> console
+scala> import es.urjc.etsii._
+import es.urjc.etsii._
+
+scala> new Alumno("Jordi", "Hurtado")
+res0: es.urjc.etsii.Alumno = jordi_hurtado
+
+scala> res0.nombre
+res1: String = jordi
+  \end{lstlisting}
+  
+\end{frame}
+
+
+
+%% Clase Curso (option, parámetro por defecto)
+
+%% Clase Gestión (nuestro primer método)
+
+%% Pruebas (vistazo general al DSL ScalaTest)
+
+
+
+%% \begin{frame}[fragile]
+%%   \frametitle{Segundo Programa: Curso de Universidad}
+
+%%   \begin{block}{Declaración de una Función}
+%%     \begin{itemize}
+%%     \item Esta función inscribe a un alumno en un curso, siempre que
+%%       la acción sea posible.
+%%     \item No es necesario entender todo el código. Sólo se pretende
+%%       dar un primer vistazo a una función de Scala.
+%%     \end{itemize}
+%%   \end{block}
+
+%%   \begin{lstlisting}[language=scala, caption=Vistazo a una función]
+%% def inscribirAlumno(al: Alumno, crs: Curso): Option[Gestion] = {
+%%   val alumnos = relacion(crs)
+%%   if ((alumnos.size >= crs.limiteAlumnos) 
+%%       || alumnos.contains(al))
+%%     None
+%%   else
+%%     Some(new Gestion(relacion + (crs -> (al :: alumnos))))
+%% }
+%%   \end{lstlisting}
+%% \end{frame}
+
+
 \end{document} 
