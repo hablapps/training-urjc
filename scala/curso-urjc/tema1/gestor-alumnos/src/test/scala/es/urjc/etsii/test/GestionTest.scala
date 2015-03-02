@@ -1,31 +1,36 @@
 package es.urjc.etsii.test
 
 import es.urjc.etsii._
-import Gestion._
 import org.scalatest._
 
 class GestionTest extends FlatSpec with Matchers {
 
-  val maria = new Alumno("María", "Pérez", true)
-  val jose  = new Alumno("José", "García", false)
-  val ana   = new Alumno("Ana", "López", false)
+  val maria = new Alumno("María", "Pérez")
+  val jose  = new Alumno(nombre = "José", apellidos = "García")
+  val ana   = new Alumno(apellidos = "López", nombre = "Ana")
+  val paco  = new Alumno("Paco", "González")
 
-  val curso = new Curso("Programación Funcional en Scala", 90, None)
+  val curso = new Curso(
+    nombre = "Programación Funcional en Scala", 
+    descripcion = Some(""), 
+    limiteAlumnos = 3)
 
-  "El gestor" should "generar el precio correcto para cada alumno" in {
-    val importeMaria = calcularImporteAlumno(curso, maria) 
-    val importeJose = calcularImporteAlumno(curso, jose)
+  "El gestor" should "permitir a un alumno inscribirse si hay plazas" in {
+    val gtn = new Gestion(Map(curso -> List(maria, jose)))
+    val optGtn = gtn.inscribirAlumno(ana, curso)
 
-    importeMaria should be (curso.precio + (curso.precio * 0.2))
-    importeJose  should be (curso.precio)
+    optGtn.get.relacion should be (Map(curso -> List(ana, maria, jose)))
   }
 
-  it should "generar el precio correcto para un grupo de alumnos" in {
-    val total = 
-      calcularImporteAlumno(curso, maria) +
-        calcularImporteAlumno(curso, jose) +
-        calcularImporteAlumno(curso, ana)
+  it should "rechazar a un alumno si ya está inscrito" in {
+    val gtn = new Gestion(Map(curso -> List(maria, jose)))
+    
+    gtn.inscribirAlumno(maria, curso) should be (None)
+  }
 
-    calcularImporteAlumnos(curso, List(maria, jose, ana)) should be (total)
+  it should "rechazar a un alumno si no quedan plazas" in {
+    val gtn = new Gestion(Map(curso -> List(maria, jose, ana)))
+    
+    gtn.inscribirAlumno(paco, curso) should be (None)
   }
 }

@@ -1,6 +1,6 @@
 package es.urjc.etsii
 
 class Curso(
-  val nombre: String, 
-  val precio: Double,
-  val descripcion: Option[String])
+  val nombre: String,
+  val descripcion: Option[String],
+  val limiteAlumnos: Int)
