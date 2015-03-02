@@ -1,5 +1,6 @@
 package controllers
 
+import scalaz.\/
 import play.api._
 import play.api.mvc._
 import play.api.libs.json._
@@ -21,7 +22,7 @@ object Members extends Controller{
       toHTTP
     }
   
-  def interpreter[U]: Store[U] => Either[StoreError, U] = 
+  def interpreter[U]: Store[U] => \/[StoreError, U] = 
     MySQLInterpreter.run[U]
     // MapInterpreter.output[U](MapInterpreter.MapStore())
   
@@ -29,7 +30,7 @@ object Members extends Controller{
     request => JoinRequest(None, request.body, gid)
 
 
-  def toHTTP(response: Either[StoreError, Either[JoinRequest, Member]]): Result = 
+  def toHTTP(response: \/[StoreError, \/[JoinRequest, Member]]): Result =
     response fold(
       error => error match {
         case error@NonExistentEntity(id) => 

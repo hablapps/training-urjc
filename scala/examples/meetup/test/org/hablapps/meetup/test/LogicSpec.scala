@@ -1,6 +1,7 @@
 package org.hablapps.meetup.test
 
 import org.specs2.mutable._
+import scalaz.{\/, -\/, \/-}
 
 import org.hablapps.meetup.{domain, db, logic}, 
   domain._, logic._, db._
@@ -12,7 +13,7 @@ class LogicSpec extends Specification {
     "devolver un error si el usuario no existe" in {
       val store1 = MapInterpreter.MapStore()
   
-      MapInterpreter.output(store1)(join(JoinRequest(None, 1, 2))) must_== Left(NonExistentEntity(1))
+      MapInterpreter.output(store1)(join(JoinRequest(None, 1, 2))) must_== -\/(NonExistentEntity(1))
     }
 
     "devolver un error si el grupo no existe" in {
@@ -20,7 +21,7 @@ class LogicSpec extends Specification {
         User(Some(1), "user 1")
       )
 
-      MapInterpreter.output(store1)(join(JoinRequest(None, 1, 2))) must_== Left(NonExistentEntity(2))
+      MapInterpreter.output(store1)(join(JoinRequest(None, 1, 2))) must_== -\/(NonExistentEntity(2))
     }
 
 
@@ -35,7 +36,7 @@ class LogicSpec extends Specification {
         Group(Some(2), "group 1", "CR", false)
       )
 
-      MapInterpreter.output(store1)(join(JoinRequest(None, 1, 2))) must_== Right(Right(Member(Some(3),1,2)))
+      MapInterpreter.output(store1)(join(JoinRequest(None, 1, 2))) must_== \/-(\/-(Member(Some(3),1,2)))
     }
 
     "prohibirse si el usuario pertenece ya" in {
@@ -47,7 +48,7 @@ class LogicSpec extends Specification {
 
       val (store2, _) = MapInterpreter.run(join(JoinRequest(None, 1, 2)))(store1)
       MapInterpreter.output(store2)(join(JoinRequest(None, 1, 2))) must beLike{
-        case Left(ConstraintFailed(IsMember(1, 2, _))) => ok
+        case -\/(ConstraintFailed(IsMember(1, 2, _))) => ok
         case _ => ko
       }
 
@@ -67,7 +68,7 @@ class LogicSpec extends Specification {
         Group(Some(2), "group 1", "CR", true)
       )
 
-      MapInterpreter.output(store1)(join(JoinRequest(None, 1, 2))) must_== Right(Left(JoinRequest(Some(3),1,2)))
+      MapInterpreter.output(store1)(join(JoinRequest(None, 1, 2))) must_== \/-(-\/(JoinRequest(Some(3),1,2)))
     }
 
     "prohibirse si el usuario pertenece ya" in {
@@ -79,7 +80,7 @@ class LogicSpec extends Specification {
       )
 
       MapInterpreter.output(store1)(join(JoinRequest(None, 1, 2))) must beLike{
-        case Left(ConstraintFailed(IsMember(1, 2, _))) => ok
+        case -\/(ConstraintFailed(IsMember(1, 2, _))) => ok
         case _ => ko
       }
     }
@@ -93,7 +94,7 @@ class LogicSpec extends Specification {
       )
 
       MapInterpreter.output(store1)(join(JoinRequest(None, 1, 2))) must beLike{
-        case Left(ConstraintFailed(IsPending(1, 2, _))) => ok
+        case -\/(ConstraintFailed(IsPending(1, 2, _))) => ok
         case _ => ko
       }
     }

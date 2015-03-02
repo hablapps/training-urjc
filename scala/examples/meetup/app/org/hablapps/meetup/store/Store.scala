@@ -1,6 +1,7 @@
 package org.hablapps.meetup.db
 
 import scala.reflect.{ClassTag, classTag}
+import scalaz.{\/, -\/, \/-}
 
 import org.hablapps.meetup.domain._
 
@@ -24,11 +25,11 @@ case class GenericError(override val msg: String) extends StoreError(msg)
   
 object Store{
   
-  def cond[U,V](f: => Boolean, `then`: Store[V], `else`: Store[U]): Store[Either[U,V]] = 
+  def cond[U,V](f: => Boolean, `then`: Store[V], `else`: Store[U]): Store[U \/ V] =
     if (f) 
-      `then` map (u => Right(u))
+      `then` map (u => \/-(u))
     else
-      `else` map (v => Left(v))
+      `else` map (v => -\/(v))
 
   def getGroup(id: Int): GetGroup[Group] = 
     GetGroup(id, t => Return(t))

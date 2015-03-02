@@ -1,10 +1,12 @@
 package org.hablapps.meetup
 
+import scalaz.\/
+
 package object logic{
   import db.Store
   import domain._
 
-  def join(request: JoinRequest): Store[Either[JoinRequest, Member]] = {
+  def join(request: JoinRequest): Store[JoinRequest \/ Member] = {
     val JoinRequest(_, uid, gid) = request
     for{
       user <- Store.getUser(uid)

@@ -1,6 +1,7 @@
 package org.hablapps.meetup.db
 
 import scala.reflect.{ClassTag, classTag}
+import scalaz.{\/, -\/, \/-}
 import org.hablapps.meetup.domain._
 
 object MapInterpreter{
@@ -13,12 +14,12 @@ object MapInterpreter{
   case class NonExistentId(id: Int) extends MapError(s"Non-existent entity $id")
 
   case class MapStore(map: Map[Int, Any], next: Int){
-    def get[T: ClassTag](id: Int): Either[MapError, T] = 
-      map.get(id).fold[Either[MapError,T]](Left(NonExistentId(id))){
+    def get[T: ClassTag](id: Int): MapError \/ T = 
+      map.get(id).fold[MapError \/ T](-\/(NonExistentId(id))){
         entity => if (!classTag[T].runtimeClass.isInstance(entity))
-          Left(WrongType(id))
+          -\/(WrongType(id))
         else 
-          Right(entity.asInstanceOf[T])
+          \/-(entity.asInstanceOf[T])
       }
   }
 
@@ -27,21 +28,21 @@ object MapInterpreter{
       MapStore((1.to(entities.size) zip entities).toMap, entities.size+1)
   }
 
-  def output[U](store: MapStore): Store[U] => Either[StoreError, U] = 
+  def output[U](store: MapStore): Store[U] => \/[StoreError, U] =
     storeProgram => run(storeProgram)(store)._2
   
-  def run[U](storeProgram: Store[U])(store: MapStore): (MapStore, Either[StoreError, U]) = 
+  def run[U](storeProgram: Store[U])(store: MapStore): (MapStore, StoreError \/ U) = 
     storeProgram match {
       case i@Return(result) =>
-        println(s"--> $i") 
-        (store, Right(result))
-      case i@Fail(error) => 
-        println(s"--> $i") 
-        (store, Left(error))
-      case GetUser(id, next) => 
+        println(s"--> $i")
+        (store, \/-(result))
+      case i@Fail(error) =>
+        println(s"--> $i")
+        (store, -\/(error))
+      case GetUser(id, next) =>
         println(s"--> GetUser($id)")
         store.get[User](id).fold(
-          error => (store, Left(error match { 
+          error => (store, -\/(error match {
             case e@ WrongType(id) => GenericError(s"Exists an entity with id $id, but it's not a user")
             case e@ NonExistentId(id) => NonExistentEntity(id) 
           })),
@@ -64,7 +65,7 @@ object MapInterpreter{
       case GetGroup(id, next) => 
         println(s"--> GetGroup($id)")
         store.get[Group](id).fold(
-          error => (store, Left(error match { 
+          error => (store, -\/(error match { 
             case e@ WrongType(id) => GenericError(s"Exists an entity with id $id, but it's not a group")
             case e@ NonExistentId(id) => NonExistentEntity(id) 
           })),
@@ -81,7 +82,7 @@ object MapInterpreter{
         val newStore = MapStore(store.map + (store.next -> joinWithId), store.next + 1)
         run(next(joinWithId))(newStore)
       case storeP => 
-        (store, Left(GenericError(s"$storeP uninterpreted")))
+        (store, -\/(GenericError(s"$storeP uninterpreted")))
     }
 
 }
