@@ -1,0 +1,277 @@
+\documentclass[pdftex,hyperref]{beamer}
+
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{amssymb}
+\usepackage{colortbl}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{bibentry}
+\usepackage{listings}
+\usepackage{tabularx}
+
+\definecolor{linkblue}{RGB}{49,57,174}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstdefinelanguage{scala}{
+  morekeywords={abstract,annotation,case,catch,class,def,%
+    do,else,extends,false,final,finally,%
+    for,if,implicit,import,match,mixin,%
+    new,null,object,override,package,%
+    private,protected,requires,return,sealed,%
+    super,this,throw,trait,true,try,%
+    type,val,var,while,with,yield,
+    macro},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[n]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]"""
+}
+\lstset{frame=tb,
+  language=scala,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true
+  tabsize=3
+}
+
+% Configuracion del documento PDF.
+\hypersetup{
+  pdfcreator=Jesús López González,
+  backref,
+  pdfpagemode=FullScreen
+}
+
+% Configuracion pagina principal
+
+\title{\textbf{Programación Funcional en Scala}}
+\subtitle{\textbf{ -- Tema 1 -- \\ Introducción a Scala }}
+\author[Jesús López González]{Jesús López González\\jesus.lopez@hablapps.com}
+\institute[@jeslg]{Programación Funcional en Scala\\ Habla Computing}
+\date{Cursos ETSII-URJC 2015}
+
+% Eleccion estilo de la presentacion
+
+\mode<presentation>
+{
+ \usetheme{Madrid}
+ \setbeamercovered{transparent}
+}
+
+\def\newblock{\hskip .11em plus .33em minus .07em}
+
+% Configuracion del logo de la imagen
+
+\subject{Talks}
+
+\pgfdeclareimage[height=0.5cm]{university-logo}{images/logoURJC}
+\logo{\pgfuseimage{university-logo}}
+
+\setcounter{tocdepth}{1}
+
+%NOANIMACION
+\beamerdefaultoverlayspecification{}
+
+% Volver a recordar tabla de contenidos en subsecciones
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>{Índice}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\nobibliography* 
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\section{Instalación del Entorno}
+
+\begin{frame}
+  \frametitle{Instalación del Entorno}
+
+  \begin{block}{Herramientas}
+    \begin{itemize}
+    \item Editor de Texto Plano
+      \begin{itemize}
+        \item EMACS (scala-mode2)
+        \item Sublime-Text
+        \item Gedit
+        \item Vim
+        \item Otros\ldots
+      \end{itemize}
+    \item Simple Build Tool (SBT)
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Instalación del Entorno: SBT}
+
+  \begin{block}{¿Qué es SBT?}
+    \begin{itemize}
+      \item Herramienta de Construcción para proyectos Scala (y Java).
+      \item Creada por Mark Harrah
+      \item Permite:
+        \begin{itemize}
+        \item Definir y describir proyectos (mediante un
+          \emph{Domain-Specific-Language} embebido en Scala)
+        \item Compilar, Ejecutar y Probar un proyecto (modo continuo)
+        \item Descargar/Publicar dependencias
+        \item Integración con la REPL
+          (\emph{Read-Evaluate-Print-Loop}) de Scala
+        \end{itemize}
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Instalación del Entorno: SBT}
+
+  \begin{block}{Instalación de SBT}
+    \begin{itemize}
+      \item Descargar el \emph{zip} de la página oficial:
+        \href{http://www.scala-sbt.org/download.html}{http://www.scala-sbt.org/download.html}
+      \item Descomprimir y añadir la ruta \emph{\$DIRECTORIO\_SBT/bin}
+        al \emph{PATH} del sistema.
+      \item Ejecutar \emph{sbt(.bat)}
+      \item Si todo ha ido bien, entraremos en la \emph{shell} de SBT,
+        que reconoceremos por el prompt \emph{``> ``} (La primera
+        ejecución puede llevar varios minutos)
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\section{Primer Programa: Hola Mundo!}
+
+\begin{frame}
+  \frametitle{Primer Programa: Hola Mundo}
+
+  \label{blk:configuracion-del-proyecto}
+  \begin{block}{Configuración del Proyecto}
+    \begin{enumerate}
+      \item Creamos un directorio \emph{hola-mundo} para albergar el proyecto.
+      \item Editamos el fichero \emph{hola-mundo/build.sbt}, en el
+        que pegaremos el código que aparece en la diapositiva
+        \ref{lst:edicion-build-sbt}. Prestar especial atención a las
+        líneas en blanco existentes entre las propiedades, ya que son
+        necesarias para el correcto funcionamiento de SBT.
+      \item Desde una terminal, accedemos al directorio del proyecto mediante
+        \emph{cd hola-mundo}.
+      \item Ejecutamos \emph{sbt} y, si todo ha ido bien, veremos el
+        prompt \emph{``> ``}.
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Primer Programa: Hola Mundo}
+
+  \label{lst:edicion-build-sbt}
+  \begin{lstlisting}[language=scala, caption=Contenido del fichero
+      build.sbt]
+name := "hola-mundo"
+
+version := "1.0"
+
+organization := "es.urjc.etsii"
+
+scalaVersion in ThisBuild := "2.11.5"
+
+scalacOptions ++= Seq("-feature")
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Primer Programa: Hola Mundo}
+
+  \begin{block}{Edición del fichero HolaMundo.scala}
+    \begin{enumerate}
+    \item Editamos el fichero \emph{hola-mundo/HolaMundo.scala}, en el
+      que pegaremos el código que aparece en la diapositiva
+      \ref{lst:edicion-holamundo-scala}.
+    \end{enumerate}
+  \end{block}
+
+  \label{lst:edicion-holamundo-scala}
+  \begin{lstlisting}[language=scala, caption=Contenido del fichero
+      HolaMundo.scala]
+object HolaMundo extends App {
+  println("¡Hola Mundo!")
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Primer Programa: Hola Mundo}
+  
+  \begin{block}{Compilación y Ejecución del Programa}
+    \begin{enumerate}
+      \item Desde la shell de SBT ejecutaremos la orden \emph{compile}
+        (escribiendo el comando ``compile'' a continuación del prompt
+        y pulsando ENTER). SBT sabe localizar el nuevo fichero fuente
+        porque se encuentra en la raíz del proyecto. Más adelante,
+        trataremos otras localizaciones donde también podemos
+        depositar nuestros ficheros ``.scala''.
+      \item Si todo ha ido bien, obtendremos una traza cuya última
+        línea comienza con el texto en tonalidad verde
+        \emph{``[success]''} y que ofrece unas breves estadísticas
+        sobre el tiempo que llevó ejecutar la tarea. Si por el
+        contrario, algo ha ido mal, la última línea mostrará un
+        \emph{``[error]''} en un llamativo color rojo.
+      \item Una vez compilado el código, podremos ejecutarlo mediante
+        la orden SBT \emph{run}, donde apreciaremos que el código
+        \emph{``¡Hola Mundo!''} se imprime por la consola.
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Primer Programa: Hola Mundo}
+  
+  \begin{block}{Algunas consideraciones sobre las tareas de SBT}
+    \begin{itemize}
+      \item La tarea \emph{run} depende de la tarea
+        \emph{compile}. SBT es inteligente y sabe identificar estas
+        dependencias. Si modificamos un fichero y ejecutamos
+        \emph{run}, SBT será capaz de detectar que los fuentes han
+        cambiado y procederá a compilar el código antes de ejecutarlo.
+      \item Si escribimos el carácter virgulilla \emph{'\char126'}
+        antes de una tarea, por ejemplo \emph{``\char126 compile''},
+        SBT entrará en modo de ejecución continuo. Esto quiere decir
+        que cada vez que se detecte que los fuentes se han modificado,
+        automáticamente se pasará a ejecutar la tarea indicada. Para
+        salir de este modo (y tal y como explica el propio SBT al
+        pasar a esta modalidad) basta con pulsar ENTER.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\section{Segundo Programa: Curso de Universidad}
+
+\end{document} 
