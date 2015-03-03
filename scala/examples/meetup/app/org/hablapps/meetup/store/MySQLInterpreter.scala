@@ -5,12 +5,100 @@ import scala.slick.driver.MySQLDriver.simple._
 import scala.slick.lifted.CompiledFunction
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import play.api.db.slick.DB
 import play.api.Play.current
 
 import org.hablapps.meetup.domain._
 
 object MySQLInterpreter{
+
+  def runFuture2[U](store: Store[U]): Future[Either[StoreError, U]] =
+    Future { run(store) }
+
+  def runFuture[U](store: Store[U]): Future[Either[StoreError, U]] = store match {
+    case Return(result) => 
+      Future.successful(Right(result))
+    case Fail(error) => 
+      Future.successful(Left(error))
+    case GetGroup(id: Int, next: (Group => Store[U])) => 
+      Future {
+        DB.withSession { implicit session =>
+          group_table.byID(Some(id)).firstOption.fold[Future[Either[StoreError,U]]](
+            Future.successful(Left[StoreError,U](NonExistentEntity(id)))
+          ){
+            entity => runFuture(next(entity))
+          }
+        }
+      } flatMap(a => a)
+    case GetUser(id: Int, next: (User => Store[U])) => 
+      Future {
+        DB.withSession { implicit session =>
+          user_table.byID(Some(id)).firstOption.fold[Future[Either[StoreError,U]]](
+            Future.successful(Left[StoreError,U](NonExistentEntity(id)))
+          ){
+            entity => runFuture(next(entity))
+          }
+        }
+      } flatMap(a => a)
+    case IsMember(uid, gid, next) => 
+      Future {
+        DB.withSession { implicit session =>
+          val isMemberQuery = for{
+            member <- member_table if member.uid === uid && member.gid === gid
+          } yield member
+          runFuture(next(isMemberQuery.firstOption.isDefined))
+        }
+      } flatMap(a => a)
+    case IsPending(uid, gid, next) => 
+      Future {
+        DB.withSession { implicit session =>
+          val isPendingQuery = for{
+            join <- join_table if join.uid === uid && join.gid === gid
+          } yield join
+          runFuture(next(isPendingQuery.firstOption.isDefined))
+        }
+      } flatMap(a => a)
+    case PutMember(member: Member, next: (Member => Store[U])) => 
+      Future {
+        DB.withSession { implicit session =>
+          val mid: Either[StoreError, Int] = try{
+            val maybeId = member_table returning member_table.map(_.mid) += member
+            maybeId.fold[Either[StoreError,Int]](Left(GenericError(s"Could not put new member $member")))(Right(_))
+          } catch {
+            case e : MySQLIntegrityConstraintViolationException => 
+              Left(ConstraintFailed(Store.isMember(member.uid, member.gid)))
+          }
+          mid match {
+            case Right(id) => runFuture(next(member.copy(mid = Some(id))))
+            case Left(e) => Future.successful(Left[StoreError, U](e))
+          }
+        }
+      } flatMap(a => a)
+    case PutJoin(join: JoinRequest, next: (JoinRequest => Store[U])) => 
+      Future {
+        DB.withSession { implicit session =>
+          val jid: Either[StoreError, Int] = try{
+            val maybeId = join_table returning join_table.map(_.jid) += join
+            maybeId.fold[Either[StoreError,Int]](
+              Left(GenericError(s"Could not put new join $join")))(
+              Right(_)
+            )
+          } catch {
+            case e : MySQLIntegrityConstraintViolationException => 
+              Left(GenericError(s"Constraint violation: $e"))
+          }
+          jid match {
+            case Right(id) =>  runFuture(next(join.copy(jid = Some(id))))
+            case Left(e) => Future.successful(Left[StoreError, U](e))
+          }
+        }
+      } flatMap(a => a)
+    case _ => 
+      Future.successful(Left(new StoreError("unevaluated yet")))
+  }
 
   def run[U](store: Store[U]): Either[StoreError, U] = store match {
     case Return(result) => 

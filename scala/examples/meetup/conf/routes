@@ -10,5 +10,6 @@ GET     /assets/*file                controllers.Assets.at(path="/public", file)
 
 # Members
 POST    /groups/:gid/members         controllers.Members.add(gid: Int)
+POST    /groups/:gid/membersF        controllers.Members.addFuture(gid: Int)
 #GET    /groups/gid/members/mid      controllers.Member.get(mid)
 #DEL    /groups/gid/members/mid      controllers.Member.del(mid)
