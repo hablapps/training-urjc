@@ -6,7 +6,7 @@ import scala.slick.lifted.CompiledFunction
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException
 
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.concurrent.Execution.Implicits._
 
 import play.api.db.slick.DB
 import play.api.Play.current

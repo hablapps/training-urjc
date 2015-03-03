@@ -7,7 +7,7 @@ import play.api.Play.current
 import play.api.db.slick.DB
 
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.concurrent.Execution.Implicits._
 
 import org.hablapps.meetup.{domain, db, logic}, 
   logic._,
