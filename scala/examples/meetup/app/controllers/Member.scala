@@ -7,7 +7,8 @@ import play.api.Play.current
 import play.api.db.slick.DB
 
 import scala.concurrent.Future
-import play.api.libs.concurrent.Execution.Implicits._
+import scala.concurrent.ExecutionContext
+import play.api.libs.concurrent.Akka
 
 import org.hablapps.meetup.{domain, db, logic}, 
   logic._,
@@ -15,6 +16,8 @@ import org.hablapps.meetup.{domain, db, logic},
   domain._
 
 object Members extends Controller{
+
+  lazy val ec: ExecutionContext = Akka.system.dispatchers.lookup("play.akka.actor.my-dispatcher")
 
   def add(gid: Int): Action[Int] =
     Action(parse.json[Int]) { 
@@ -28,7 +31,7 @@ object Members extends Controller{
     Action.async(parse.json[Int]) { 
       fromHTTP(gid)       andThen 
       join                andThen
-      interpreterFuture2  andThen
+      interpreterFuture   andThen
       toHTTPFuture
     }
   
@@ -37,10 +40,7 @@ object Members extends Controller{
     // MapInterpreter.output[U](MapInterpreter.MapStore())
   
   def interpreterFuture[U]: Store[U] => Future[Either[StoreError, U]] = 
-    MySQLInterpreter.runFuture[U]
-  
-  def interpreterFuture2[U]: Store[U] => Future[Either[StoreError, U]] = 
-    MySQLInterpreter.runFuture2[U]
+    MySQLInterpreter.runFuture[U](_)(ec)
   
   def fromHTTP(gid: Int): Request[Int] => JoinRequest = 
     request => JoinRequest(None, request.body, gid)
@@ -67,6 +67,6 @@ object Members extends Controller{
     )
 
   def toHTTPFuture(response: Future[Either[StoreError, Either[JoinRequest, Member]]]): Future[Result] =
-    response map toHTTP
+    response.map(toHTTP)(ec)
 
 }
