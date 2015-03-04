@@ -5,12 +5,18 @@ import scala.slick.driver.MySQLDriver.simple._
 import scala.slick.lifted.CompiledFunction
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
+
 import play.api.db.slick.DB
 import play.api.Play.current
 
 import org.hablapps.meetup.domain._
 
 object MySQLInterpreter{
+
+  def runFuture[U](store: Store[U])(ec: ExecutionContext): Future[Either[StoreError, U]] =
+    Future(run(store))(ec)
 
   def run[U](store: Store[U]): Either[StoreError, U] = store match {
     case Return(result) => 
@@ -26,6 +32,7 @@ object MySQLInterpreter{
         }
       }
     case GetUser(id: Int, next: (User => Store[U])) => 
+      // Thread.sleep(100)
       DB.withSession { implicit session =>
         user_table.byID(Some(id)).firstOption.fold[Either[StoreError,U]](
           Left[StoreError,U](NonExistentEntity(id))

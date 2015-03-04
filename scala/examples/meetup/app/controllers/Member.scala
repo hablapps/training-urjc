@@ -6,12 +6,18 @@ import play.api.libs.json._
 import play.api.Play.current
 import play.api.db.slick.DB
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
+import play.api.libs.concurrent.Akka
+
 import org.hablapps.meetup.{domain, db, logic}, 
   logic._,
   db._,
   domain._
 
 object Members extends Controller{
+
+  lazy val ec: ExecutionContext = Akka.system.dispatchers.lookup("play.akka.actor.my-dispatcher")
 
   def add(gid: Int): Action[Int] =
     Action(parse.json[Int]) { 
@@ -20,10 +26,21 @@ object Members extends Controller{
       interpreter   andThen
       toHTTP
     }
+
+  def addFuture(gid: Int): Action[Int] =
+    Action.async(parse.json[Int]) { 
+      fromHTTP(gid)       andThen 
+      join                andThen
+      interpreterFuture   andThen
+      toHTTPFuture
+    }
   
   def interpreter[U]: Store[U] => Either[StoreError, U] = 
     MySQLInterpreter.run[U]
     // MapInterpreter.output[U](MapInterpreter.MapStore())
+  
+  def interpreterFuture[U]: Store[U] => Future[Either[StoreError, U]] = 
+    MySQLInterpreter.runFuture[U](_)(ec)
   
   def fromHTTP(gid: Int): Request[Int] => JoinRequest = 
     request => JoinRequest(None, request.body, gid)
@@ -48,5 +65,8 @@ object Members extends Controller{
           Created(Json.toJson(member)(Json.writes[Member]))
       )
     )
+
+  def toHTTPFuture(response: Future[Either[StoreError, Either[JoinRequest, Member]]]): Future[Result] =
+    response.map(toHTTP)(ec)
 
 }
