@@ -10,7 +10,7 @@ package object logic{
       user <- Store.getUser(uid)
       group <- Store.getGroup(gid)
       joinOrMember <- 
-        Store.If(!group.must_approve)(
+        Store.either(!group.must_approve)(
           _then = Store.putMember(Member(None, uid, gid)), 
           _else = Store.putJoin(request) unless Store.isPending(uid, gid)
         ) unless Store.isMember(uid, gid)
@@ -22,7 +22,7 @@ package object logic{
     Store.getUser(uid) flatMap { user =>
       Store.getGroup(gid) flatMap { 
         group => (
-          Store.If (!group.must_approve)(
+          Store.either(!group.must_approve)(
             _then = Store.putMember(Member(None, uid, gid)),
             _else = Store.putJoin(request) unless Store.isPending(uid, gid)
           )
