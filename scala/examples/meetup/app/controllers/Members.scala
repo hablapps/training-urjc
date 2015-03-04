@@ -17,8 +17,6 @@ import org.hablapps.meetup.{domain, db, logic},
 
 object Members extends Controller{
 
-  lazy val ec: ExecutionContext = Akka.system.dispatchers.lookup("play.akka.actor.my-dispatcher")
-
   def add(gid: Int): Action[Int] =
     Action(parse.json[Int]) { 
       fromHTTP(gid) andThen 
@@ -27,24 +25,11 @@ object Members extends Controller{
       toHTTP
     }
 
-  def addFuture(gid: Int): Action[Int] =
-    Action.async(parse.json[Int]) { 
-      fromHTTP(gid)       andThen 
-      join                andThen
-      interpreterFuture   andThen
-      toHTTPFuture
-    }
-  
   def interpreter[U]: Store[U] => Either[StoreError, U] = 
     MySQLInterpreter.run[U]
-    // MapInterpreter.output[U](MapInterpreter.MapStore())
-  
-  def interpreterFuture[U]: Store[U] => Future[Either[StoreError, U]] = 
-    MySQLInterpreter.runFuture[U](_)(ec)
   
   def fromHTTP(gid: Int): Request[Int] => JoinRequest = 
     request => JoinRequest(None, request.body, gid)
-
 
   def toHTTP(response: Either[StoreError, Either[JoinRequest, Member]]): Result = 
     response fold(
@@ -65,8 +50,5 @@ object Members extends Controller{
           Created(Json.toJson(member)(Json.writes[Member]))
       )
     )
-
-  def toHTTPFuture(response: Future[Either[StoreError, Either[JoinRequest, Member]]]): Future[Result] =
-    response.map(toHTTP)(ec)
 
 }

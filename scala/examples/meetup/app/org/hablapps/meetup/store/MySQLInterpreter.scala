@@ -15,7 +15,7 @@ import org.hablapps.meetup.domain._
 
 object MySQLInterpreter{
 
-  def runFuture[U](store: Store[U])(ec: ExecutionContext): Future[Either[StoreError, U]] =
+  def runAsync[U](store: Store[U])(ec: ExecutionContext): Future[Either[StoreError, U]] =
     Future(run(store))(ec)
 
   def run[U](store: Store[U]): Either[StoreError, U] = store match {
