@@ -375,44 +375,207 @@ scala> new Alumno("Jordi", "Hurtado")
 res0: es.urjc.etsii.Alumno = jordi_hurtado
 
 scala> res0.nombre
-res1: String = jordi
+res1: String = Jordi
   \end{lstlisting}
   
 \end{frame}
 
+\begin{frame}[fragile]
+  \frametitle{Segundo Programa: Curso de Universidad}
 
+  \begin{block}{La clase \emph{Curso}}
+    \begin{itemize}
+    \item Los ``valores de parámetro por defecto'' nos permiten
+      establecer el valor por defecto de un atributo. Si el
+      programador no proporciona un valor en la instanciación, se
+      utilizarán estos mismos.
+    \item El tipo \emph{Option[A]} nos permite tener un valor de tipo
+      \emph{A} que puede estar definido o no. En este contexto, la
+      descripción del curso puede ser opcional.
+    \end{itemize}
+  \end{block}
 
-%% Clase Curso (option, parámetro por defecto)
+  \label{lst:curso-scala}
+  \begin{lstlisting}[language=scala, caption=Contenido del fichero Curso.scala]
+package es.urjc.etsii
 
-%% Clase Gestión (nuestro primer método)
+class Curso(
+  val nombre: String,
+  val limiteAlumnos: Int = 30,
+  val descripcion: Option[String] = None)
+  \end{lstlisting}
+  
+\end{frame}
 
-%% Pruebas (vistazo general al DSL ScalaTest)
+\begin{frame}[fragile]
+  \frametitle{Segundo Programa: Curso de Universidad}
 
+  \label{lst:curso-repl}
+  \begin{lstlisting}[language=scala, caption=Jugando con Curso en la
+      REPL]
+scala> new Curso("Prog Func Scala", 40, None)
+res0: es.urjc.etsii.Curso = es.urjc.etsii.Curso@4c5742d5
 
+scala> new Curso("Prog Func Scala", 25)
+res1: es.urjc.etsii.Curso = es.urjc.etsii.Curso@4ca65f7a
 
-%% \begin{frame}[fragile]
-%%   \frametitle{Segundo Programa: Curso de Universidad}
+scala> new Curso("Prog Func Scala")
+res2: es.urjc.etsii.Curso = es.urjc.etsii.Curso@3d29753c
 
-%%   \begin{block}{Declaración de una Función}
-%%     \begin{itemize}
-%%     \item Esta función inscribe a un alumno en un curso, siempre que
-%%       la acción sea posible.
-%%     \item No es necesario entender todo el código. Sólo se pretende
-%%       dar un primer vistazo a una función de Scala.
-%%     \end{itemize}
-%%   \end{block}
+scala> new Curso("Prog Func Scala", descripcion=Some("Piensa en Funcional"))
+res3: es.urjc.etsii.Curso = es.urjc.etsii.Curso@8b62a98
+  \end{lstlisting}
+  
+\end{frame}
 
-%%   \begin{lstlisting}[language=scala, caption=Vistazo a una función]
-%% def inscribirAlumno(al: Alumno, crs: Curso): Option[Gestion] = {
-%%   val alumnos = relacion(crs)
-%%   if ((alumnos.size >= crs.limiteAlumnos) 
-%%       || alumnos.contains(al))
-%%     None
-%%   else
-%%     Some(new Gestion(relacion + (crs -> (al :: alumnos))))
-%% }
-%%   \end{lstlisting}
-%% \end{frame}
+\begin{frame}
+  \frametitle{Segundo Programa: Curso de Universidad}
 
+  \begin{block}{La clase Gestion}
+    \begin{itemize}
+    \item Un método se define bajo el formato\\ \emph{def
+      nombre\_metodo(arg1: TArg1, arg2: TArg2...): TRet = ...}.
+    \item NO existe un token \emph{return} para devolver el valor de
+      la función. En su lugar, la función devolverá el valor resultado
+      de la última instrucción existente dentro del bloque\footnote{De
+        hecho, el patrón es más genérico. Una expresión-bloque
+        devuelve el valor de salida de la última instrucción que se
+        encuentra dentro del bloque.}.
+    \item Se puede apreciar cómo el tipo que devuelve el método
+      también es opcional, lo que nos permite marcar situaciones de
+      error, mediante un valor no definido (\emph{None}).
+    \end{itemize}
+  \end{block}
+\end{frame}
 
-\end{document} 
+\begin{frame}[fragile]
+  \frametitle{Segundo Programa: Curso de Universidad}
+
+  \label{lst:gestion-scala}
+  \begin{lstlisting}[language=scala, caption=Contenido del fichero
+      Gestion.scala]
+package es.urjc.etsii
+
+class Gestion(val relacion: Map[Curso, List[Alumno]] = Map()) {
+  def inscribirAlumno(al: Alumno, cr: Curso): Option[Gestion] = {
+    val alumnos = relacion(cr)
+    if ((al.size >= cr.limiteAlumnos) || alumnos.contains(al))
+      None
+    else
+      Some(new Gestion(relacion + (cr -> (al :: alumnos))))
+  }
+}
+  \end{lstlisting}
+  
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Segundo Programa: Curso de Universidad}
+
+  \begin{lstlisting}[language=scala, caption=Invocando un método en la
+    REPL]
+scala> val al = new Alumno("Jordi", "Hurtado")
+al: es.urjc.etsii.Alumno = jordi_hurtado
+
+scala> val cr = new Curso("Programacion Funcional en Scala")
+cr: es.urjc.etsii.Curso = es.urjc.etsii.Curso@6fc54b7c
+
+scala> val gs = new Gestion()
+gs: es.urjc.etsii.Gestion = es.urjc.etsii.Gestion@15e21f69
+
+scala> gs.inscribirAlumno(al, cr)
+res0: Option[es.urjc.etsii.Gestion] = Some(es.urjc.etsii.Gestion@13a866c6)
+  \end{lstlisting}
+  
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Segundo Programa: Curso de Universidad}
+
+  \begin{block}{Probando el método Gestion.inscribirAlumno}
+    \begin{enumerate}
+    \item Crearemos un fichero GestionTest.scala el el directorio
+      \emph{gestor-alumnos/src/test/scala/es/urjc/etsii/test}
+    \item Como ya mencionamos anteriormente, el hecho de depositar el
+      fichero en esa ruta nos permite la integración con la tareas de
+      SBT.
+    \item Una vez efectuada la implementación del caso de prueba (ver
+      el listado en la diapositiva \ref{lst:test-inscribirAlumno}),
+      pasamos a ejecutarlo mediante la tarea \emph{test} de SBT.
+    \item Al finalizar la ejecución de la tarea veremos una relación
+      con los casos de prueba correctos y erróneos.
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Segundo Programa: Curso de Universidad}
+
+  \label{lst:test-inscribirAlumno}
+  \begin{lstlisting}[language=scala, caption=Probando el método
+      inscribirAlumno]
+package es.urjc.etsii.test
+
+import scalatest._
+import es.urjc.etsii._
+
+class GestionTest extends FlatSpec with Matchers {
+  "El gestor" should "permitir a un alumno inscribirse" in {
+    val gtn = new Gestion(Map(curso -> List(maria, jose)))
+    val optGtn = gtn.inscribirAlumno(ana, curso)
+    val exp = Map(curso -> List(ana, maria, jose))
+    optGtn.get.relacion should be (exp)
+  }
+  it should "rechazar a un alumno si ya está inscrito" in {
+    val gtn = new Gestion(Map(curso -> List(maria, jose)))
+    gtn.inscribirAlumno(maria, curso) should be (None)
+  }
+}
+  \end{lstlisting}
+  
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Segundo Programa: Curso de Universidad}
+
+  \begin{block}{Probando el método Gestion.inscribirAlumno}
+    \begin{enumerate}
+    \item Crearemos un fichero GestionTest.scala el el directorio
+      \emph{gestor-alumnos/src/test/scala/es/urjc/etsii/test}
+    \item Como ya mencionamos anteriormente, el hecho de depositar el
+      fichero en esa ruta nos permite la integración con la tareas de
+      SBT.
+    \item Una vez efectuada la implementación del caso de prueba (ver
+      el listado en la diapositiva \ref{lst:test-inscribirAlumno}),
+      pasamos a ejecutarlo mediante la tarea \emph{test} de SBT.
+    \item Al finalizar la ejecución de la tarea veremos una relación
+      con los casos de prueba correctos y erróneos.
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\section{Takeaways}
+
+\begin{frame}
+  \frametitle{Takeaways}
+
+  \begin{block}{}
+    Conocemos las tareas básicas de SBT: \emph{compile, run,
+      test\ldots} y somos capaces de configurar un nuevo proyecto.
+  \end{block}
+  \begin{block}{}
+    Sabemos trastear con la REPL para realizar pequeños experimentos
+    con nuestro proyecto.
+  \end{block}
+  \begin{block}{}
+    Podemos desarrollar una especificación de prueba usando el
+    framework ScalaTest.
+  \end{block}
+  \begin{block}{}
+    Hemos tenido nuestra primera toma de contacto con la sintaxis de
+    Scala. \emph{¡No es necesario que entendamos toda la sintaxis
+      vista en la sesión!}
+  \end{block}
+\end{frame}
+
+\end{document}

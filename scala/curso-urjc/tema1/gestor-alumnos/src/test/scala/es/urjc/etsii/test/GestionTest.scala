@@ -12,7 +12,7 @@ class GestionTest extends FlatSpec with Matchers {
 
   val curso = new Curso(
     nombre = "Programación Funcional en Scala", 
-    descripcion = Some(""), 
+    descripcion = Some("Piensa en Funcional!"), 
     limiteAlumnos = 3)
 
   "El gestor" should "permitir a un alumno inscribirse si hay plazas" in {
