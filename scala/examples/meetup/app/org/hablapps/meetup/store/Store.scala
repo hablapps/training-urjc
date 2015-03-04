@@ -30,22 +30,22 @@ object Store{
     else
       _else map (v => Left(v))
 
-  def getGroup(id: Int): GetGroup[Group] = 
+  def getGroup(id: Int): Store[Group] = 
     GetGroup(id, t => Return(t))
   
-  def getUser(id: Int): GetUser[User] =  
+  def getUser(id: Int): Store[User] =  
     GetUser(id, t => Return(t))
 
-  def putJoin(t: JoinRequest): PutJoin[JoinRequest] = 
+  def putJoin(t: JoinRequest): Store[JoinRequest] = 
     PutJoin(t, t1 => Return(t1))
 
-  def putMember(t: Member): PutMember[Member] = 
+  def putMember(t: Member): Store[Member] = 
     PutMember(t, t1 => Return(t1))
 
-  def isMember(uid: Int, gid: Int): IsMember[Boolean] = 
+  def isMember(uid: Int, gid: Int): Store[Boolean] = 
     IsMember(uid, gid, Return(_))
 
-  def isPending(uid: Int, gid: Int): IsPending[Boolean] = 
+  def isPending(uid: Int, gid: Int): Store[Boolean] = 
     IsPending(uid, gid, Return(_))
 
   implicit class StoreOps[U](store: Store[U]){

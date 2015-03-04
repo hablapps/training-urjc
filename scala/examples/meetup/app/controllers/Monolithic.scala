@@ -37,12 +37,12 @@ object Monolithic extends Controller{
             NotFound(s"User $uid not found")
           else must_approve match {
             case Some(true) => 
-              Ok("pending")
+              Accepted("pending")
             case _ => 
               try {
                 implicit val MemberFormat = Json.writes[Member]
                 val mid = member_table returning member_table.map(_.mid) += Member(None, uid, gid)
-                Ok(Json.toJson(Member(mid,uid, gid)))
+                Created(Json.toJson(Member(mid,uid, gid)))
               } catch {
                 case e : MySQLIntegrityConstraintViolationException => 
                   Forbidden("Already a member")
