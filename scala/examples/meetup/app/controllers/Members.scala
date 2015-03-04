@@ -6,6 +6,10 @@ import play.api.libs.json._
 import play.api.Play.current
 import play.api.db.slick.DB
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
+import play.api.libs.concurrent.Akka
+
 import org.hablapps.meetup.{domain, db, logic}, 
   logic._,
   db._,
@@ -20,14 +24,12 @@ object Members extends Controller{
       interpreter   andThen
       toHTTP
     }
-  
+
   def interpreter[U]: Store[U] => Either[StoreError, U] = 
     MySQLInterpreter.run[U]
-    // MapInterpreter.output[U](MapInterpreter.MapStore())
   
   def fromHTTP(gid: Int): Request[Int] => JoinRequest = 
     request => JoinRequest(None, request.body, gid)
-
 
   def toHTTP(response: Either[StoreError, Either[JoinRequest, Member]]): Result = 
     response fold(
