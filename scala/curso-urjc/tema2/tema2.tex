@@ -59,8 +59,8 @@
 % Configuracion del documento PDF.
 \hypersetup{
   pdfcreator=Jesús López González,
-  backref,
-  pdfpagemode=FullScreen
+  backref%,
+  %%pdfpagemode=FullScreen
 }
 
 % Configuracion pagina principal
@@ -136,7 +136,115 @@
 \begin{frame}[fragile]
   \frametitle{¿Qué es la Programación funcional?}
 
-  %% Unit
+  \begin{block}{Paradigma Funcional y Pureza}
+    La programación funcional se basa en una única premisa: programar
+    con \emph{funciones puras}. Una función pura es aquella que no
+    tiene efectos de lado y que para una misma entrada siempre
+    devolverá la misma salida (mapeo de valores).
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Ejemplo de función pura]
+def add(a: Int, b: Int): Int = a + b
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{¿Qué es la Programación funcional?}
+
+  \begin{block}{Transparencia Referencial y Modelo de Sustitución} 
+    Se dice que una expresión es \emph{referentially transparent} si
+    tras reemplazarla por el valor que devuelve, no se aprecia ningún
+    cambio en el comportamiento del programa. Esta cualidad activa un
+    nuevo modo de evaluar nuestros programas: \emph{el modelo de
+      sustitución}. Y es que cuando contamos con la transparencia
+    referencial podemos razonar sobre nuestros programas como si se
+    tratasen de expresiones algebraicas.
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Aplicando el modelo de
+      sustitución sobre una expresión]
+def add(a: Int, b: Int): Int = a + b
+
+add(add(1, 2), add(add(4, 5), 6))
+add(3, add(add(4, 5), 6))
+add(3, add(9, 6))
+add(3, 15)
+18
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{¿Qué es la Programación funcional?}
+
+  \begin{lstlisting}[language=scala, caption=¿Es una función pura?]
+var lastAdd: Int = 0
+
+def add2(a: Int, b: Int): Int = {
+  val res = a + b
+  lastAdd = res
+  res
+}
+
+// Puedes apoyarte en el siguiente programa...
+
+add2(1, 2)
+doSomething(lastAdd)
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{¿Qué es la Programación funcional?}
+
+  \begin{lstlisting}[language=scala, caption=¿Y esta función?]
+def add3(a: Int, b: Int): Int = {
+  println(s"Adding $a and $b")
+  a + b
+}
+  \end{lstlisting}
+
+  \begin{lstlisting}[language=scala, caption=¿Y ésta otra?]
+def add4(a: Int, b: Int): Int = {
+  var res = a + b
+  res = res - 1
+  res = res + 1
+  res
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{¿Qué es la Programación funcional?}
+
+  \begin{block}{¿Por qué preocuparnos por el Paradigma Funcional?}
+    
+    % Hablar sobre la historia de la programación funcional
+
+    \begin{itemize}
+      \item Eficiencia / Escalabilidad (multi-cores, Big Data)
+      \item Modularidad (reusabilidad, composición\ldots)
+      \item Testability (property-based testing)
+      \item Comprensibilidad (estructura, funcionamiento,
+        depuración\ldots)
+    \end{itemize}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{¿Qué es la Programación funcional?}
+
+  \begin{block}{¿Y por qué preocuparnos por Scala?}
+    \begin{itemize}
+      \item Multiparadigma e Impuro (\emph{Scala as a better Java})
+      \item Lenguaje JVM estáticamente tipado
+      \item Más que un lenguaje, un ecosistema (Play, Akka,
+        Spark\ldots)
+    \end{itemize}
+  \end{block}
+
+  %% Explicación del tipo Unit (tuplas) ¿Realmente podemos ser puros?
+  %% Impureza de Scala
 
   \begin{lstlisting}[language=scala, caption=Hola Mundo en Scala]
 object HolaMundo {
@@ -145,16 +253,7 @@ object HolaMundo {
   }
 }
   \end{lstlisting}
-
 \end{frame}
-
-%% Pureza
-
-%% Transparencia Referencial
-
-%% Modelo de Substitución
-
-%% Estado actual del paradigma funcional: cores, futures...
 
 \section{Funciones en Scala}
 
