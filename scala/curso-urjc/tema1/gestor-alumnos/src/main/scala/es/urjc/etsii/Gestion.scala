@@ -1,17 +1,12 @@
 package es.urjc.etsii
 
-object Gestion {
+class Gestion(val relacion: Map[Curso, List[Alumno]] = Map()) {
 
-  def calcularImporteAlumno(curso: Curso, alumno: Alumno): Double = {
-    if (alumno.esExterno)
-      curso.precio + (curso.precio * 0.2)
+  def inscribirAlumno(alumno: Alumno, curso: Curso): Option[Gestion] = {
+    val alumnos = relacion.get(curso).getOrElse(List())
+    if ((alumnos.size >= curso.limiteAlumnos) || alumnos.contains(alumno))
+      None
     else
-      curso.precio
-  }
-
-  def calcularImporteAlumnos(curso: Curso, alumnos: List[Alumno]): Double = {
-    alumnos
-      .map(calcularImporteAlumno(curso, _))
-      .fold(0.0)(_ + _)
+      Some(new Gestion(relacion + (curso -> (alumno :: alumnos))))
   }
 }
