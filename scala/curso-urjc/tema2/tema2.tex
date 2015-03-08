@@ -66,7 +66,7 @@
 % Configuracion pagina principal
 
 \title{\textbf{Programación Funcional en Scala}}
-\subtitle{\textbf{ -- Tema 2 -- \\ Introducción a la Programación Funcional }}
+\subtitle{\textbf{ -- Tema 2 (Parte I) -- \\ Introducción a la Programación Funcional }}
 \author[Jesús López González]{Jesús López González\\jesus.lopez@hablapps.com}
 \institute[@jeslg]{Programación Funcional en Scala\\ Habla Computing}
 \date{Cursos ETSII-URJC 2015}
@@ -405,6 +405,7 @@ res0: Int = 15
   \frametitle{Funciones en Scala}
 
   %% Incluso el constructor List es una función variadic
+  %% List(List(1, 2, 3, 4, 5): _*)
 
   \label{lst:variadic-repl}
   \begin{lstlisting}[language=scala, caption=Declaración y uso de una
@@ -435,9 +436,10 @@ res3: Int = 15
     desplegar varias listas. Esto, que a priori puede resultar de poca
     utilidad, tiene aplicación en ciertas situaciones:
     \begin{itemize}
-    \item En el trabajo con implícitos (que veremos en el T3)
+    \item En el paso de parámetros implícitamente (que veremos en el
+      T3)
     \item Para ayudar al compilador con la inferencia de tipos
-    \item Si queremos utilizar la técnica de \emph{currifying}, que
+    \item Si queremos utilizar la técnica de \emph{currying}, que
       veremos en el siguiente apartado.
     \end{itemize}
   \end{block}
@@ -458,30 +460,175 @@ res4: Int = 10
   \end{lstlisting}
 \end{frame}
 
-%% Currificación
+\begin{frame}
+  \frametitle{Funciones en Scala}
 
-%% Composición de Funciones
+  \begin{block}{Currying}
+    La currificación consiste en transformar una función que utiliza
+    múltiples argumentos (o más específicamente una n-tupla como
+    argumento) en una función que utiliza un único argumento.
+  \end{block}
+\end{frame}
 
-%% Funciones Polimórficas
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
 
-%% Documentación de funciones (Scala List vs Java ArrayList)
+  \label{lst:currying-repl}
+  \begin{lstlisting}[language=scala, caption=Currying nativo en Scala]
+scala> def add(a: Int)(b: Int)(c: Int, d: Int): Int =
+     |   a + b + c + d
+add: (a: Int)(b: Int)(c: Int, d: Int)Int
 
-\section{Tipos algebraicos de datos (ADTs)}
+scala> val f = add(1) _
+f: Int => ((Int, Int) => Int) = <function1>
 
-%% objects y case classes (apply, unapply...)
+scala> val g = f(2)
+g: (Int, Int) => Int = <function2>
 
-%% pattern matching
+scala> g(3, 4)
+res0: Int = 10
+  \end{lstlisting}
+\end{frame}
 
-%% inmutabilidad y data sharing
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
 
-%% Ejemplos: Option y List
+  %% a => b => f(a, b)
+  \begin{block}{Ejercicio 1}
+    Implementa la función \emph{def curry}, cuya signature se muestra
+    en la siguiente sesión REPL.
+  \end{block}
 
-\section{Ejemplo: Plegando Listas}
+  \label{lst:def-curry-repl}
+  \begin{lstlisting}[language=scala, caption=Implementando nuestra
+      propia función de currificación]
+scala> def curry(f: (Int, Int) => Int): Int => Int => Int = ???
+curry: (f: (Int, Int) => Int)Int => (Int => Int)
 
-%% Funciones recursivas
+scala> def add(x: Int, y: Int) = x + y
+add: (x: Int, y: Int)Int
 
-%% Implementando fold, foldLeft y foldRight
+scala> val f = curry(add)
+f: Int => (Int => Int) = <function1>
 
-\section{Takeaways}
+scala> f(1)(2)
+res0: Int = 3
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  %% Habla de la restricción de dominios y codominios
+
+  %% ¿Cómo se implementa el método compose?
+
+  %% Notación infija, la veremos más adelante
+
+  \begin{block}{Composición de Funciones}
+    De manera informal, podemos definir la composición de funciones
+    como la aplicación de una función al resultado de otra.
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Composición nativa de
+      funciones show y double]
+scala> val double: Int => Int = x => x * 2
+double: Int => Int = <function1>
+
+scala> val show: Int => String = x => x.toString
+show: Int => String = <function1>
+
+scala> val showDouble = show compose double
+showDouble: Int => String = <function1>
+
+scala> showDouble(2)
+res0: String = 4
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Ejercicio 2}
+    Implementa la función \emph{compose}, cuya signatura se muestra en
+    la siguiente sesión REPL.
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Uso de nuestra propia
+      función de composición (prefija)]
+scala> def compose(f: Int => String, g: Int => Int): Int => String = ???
+compose: (f: Int => String, g: Int => Int)Int => String
+
+scala> val showDouble = compose(show, double)
+showDouble: Int => String = <function1>
+
+scala> showDouble(4)
+res0: String = 8
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Función Polimórfica}
+    Las funciones en Scala pueden estar parametrizadas con valores y
+    con tipos. Ya sabemos que los parámetros valor se definen entre
+    paréntesis. Por su parte, los parámetros tipo se declaran entre
+    corchetes. Los parámetros tipo nos permiten abstraer un
+    comportamiento recurrente. De esta manera, una única
+    implementación podría ser suficiente para cubrir un gran número de
+    casos.
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{lstlisting}[language=scala, caption=Función polimórfica add]
+scala> def add[A](x: A, y: A)(f: (A, A) => A): A = f(x, y)
+add: [A](x: A, y: A)(f: (A, A) => A)A
+
+scala> add(1, 2)(_ + _)
+res0: Int = 3
+
+scala> add("hola", "mundo")(_ + _)
+res1: String = holamundo
+
+scala> add(List(1, 2, 3), List(4, 5, 6))(_ ++ _)
+res2: List[Int] = List(1, 2, 3, 4, 5, 6)
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+%% scala> def curry[A, B, C](f: (A, B) => C): A => B => C =
+%%      |   a => b => f(a, b)
+%% curry: [A, B, C](f: (A, B) => C)A => (B => C)
+
+%% scala> def compose[A, B, C](g: B => C, f: A => B): A => C =
+%%      |   a => g(f(a))
+%% compose: [A, B, C](g: B => C, f: A => B)A => C
+
+  \begin{block}{Ejercicio 3}
+    Implementa las funciones \emph{curry} y \emph{compose} de forma
+    polimórfica y demuestra su correcto funcionamiento con varios
+    escenarios. ¿Cuántos parámetros tipo te hacen falta para
+    implementar cada una de estas funciones?
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  %% Documentación de funciones (Scala List vs Java ArrayList)
+
+  \begin{center}
+    \includegraphics[width=0.9\linewidth]{images/propuesta-meetup.png}
+  \end{center}
+\end{frame}
 
 \end{document} 
