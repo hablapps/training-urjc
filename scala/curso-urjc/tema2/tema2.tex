@@ -110,17 +110,51 @@
   \titlepage
 \end{frame}
 
-\section{¿Que son los efectos de lado?}
-
-%% Motivación de la programación funcional
-
 \section{¿Qué es la Programación Funcional?}
 
-%% Función Pura
+\begin{frame}[fragile]
+  \frametitle{¿Qué es la Programación funcional?}
+
+  \begin{block}{Efectos de Lado}
+    Se dice que una función tiene efectos de lado si, además de
+    devolver un valor, modifica algún estado o interactúa visiblemente
+    con el mundo externo.
+  \end{block}
+
+  \begin{block}{Ejemplos}
+    \begin{itemize}
+    \item Modificar una variable global
+    \item Invocar un \emph{setter}
+    \item Lanzar una excepción
+    \item Imprimir una traza por la consola
+    \item Actualizar un dato en una BBDD
+    \item Invocar un servicio web externo
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{¿Qué es la Programación funcional?}
+
+  %% Unit
+
+  \begin{lstlisting}[language=scala, caption=Hola Mundo en Scala]
+object HolaMundo {
+  def main(args: Array[String]): Unit = {
+    println("¡Hola Mundo!")
+  }
+}
+  \end{lstlisting}
+
+\end{frame}
+
+%% Pureza
 
 %% Transparencia Referencial
 
-%% Modelo de Sustitución
+%% Modelo de Substitución
+
+%% Estado actual del paradigma funcional: cores, futures...
 
 \section{Funciones en Scala}
 
@@ -131,6 +165,8 @@
 %% Funciones de orden superior
 
 %% Funciones recursivas
+
+%% Currificación
 
 %% Composición de Funciones
 
@@ -149,5 +185,7 @@
 \section{Ejemplo: Plegando Listas}
 
 %% Implementando fold, foldLeft y foldRight
+
+\section{Takeaways}
 
 \end{document} 
