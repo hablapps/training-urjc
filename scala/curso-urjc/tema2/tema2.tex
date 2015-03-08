@@ -113,7 +113,7 @@
 \section{¿Qué es la Programación Funcional?}
 
 \begin{frame}[fragile]
-  \frametitle{¿Qué es la Programación funcional?}
+  \frametitle{¿Qué es la Programación Funcional?}
 
   \begin{block}{Efectos de Lado}
     Se dice que una función tiene efectos de lado si, además de
@@ -134,7 +134,7 @@
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{¿Qué es la Programación funcional?}
+  \frametitle{¿Qué es la Programación Funcional?}
 
   \begin{block}{Paradigma Funcional y Pureza}
     La programación funcional se basa en una única premisa: programar
@@ -150,7 +150,7 @@ def add(a: Int, b: Int): Int = a + b
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{¿Qué es la Programación funcional?}
+  \frametitle{¿Qué es la Programación Funcional?}
 
   \begin{block}{Transparencia Referencial y Modelo de Sustitución} 
     Se dice que una expresión es \emph{referentially transparent} si
@@ -175,7 +175,7 @@ add(3, 15)
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{¿Qué es la Programación funcional?}
+  \frametitle{¿Qué es la Programación Funcional?}
 
   \begin{lstlisting}[language=scala, caption=¿Es una función pura?]
 var lastAdd: Int = 0
@@ -194,7 +194,7 @@ doSomething(lastAdd)
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{¿Qué es la Programación funcional?}
+  \frametitle{¿Qué es la Programación Funcional?}
 
   \begin{lstlisting}[language=scala, caption=¿Y esta función?]
 def add3(a: Int, b: Int): Int = {
@@ -214,7 +214,7 @@ def add4(a: Int, b: Int): Int = {
 \end{frame}
 
 \begin{frame}
-  \frametitle{¿Qué es la Programación funcional?}
+  \frametitle{¿Qué es la Programación Funcional?}
 
   \begin{block}{¿Por qué preocuparnos por el Paradigma Funcional?}
     
@@ -232,7 +232,7 @@ def add4(a: Int, b: Int): Int = {
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{¿Qué es la Programación funcional?}
+  \frametitle{¿Qué es la Programación Funcional?}
 
   \begin{block}{¿Y por qué preocuparnos por Scala?}
     \begin{itemize}
@@ -257,13 +257,206 @@ object HolaMundo {
 
 \section{Funciones en Scala}
 
-%% First-class citizens (val function)
+\begin{frame}
+  \frametitle{Funciones en Scala}
 
-%% Lambdas
+  \begin{center}
+    \includegraphics[width=0.5\linewidth]{images/functions-everywhere.jpg}
+  \end{center}
 
-%% Funciones de orden superior
+\end{frame}
 
-%% Funciones recursivas
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Definición de Función}
+    Una \textbf{función} es un dispositivo computacional componible
+    que permite exclusivamente transformar valores de entrada en
+    valores de salida.
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Nuestra ya conocida
+      función add]
+def add(a: Int, b: Int): Int = a + b
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Funciones como ciudadanos de primera clase}
+    En Scala, es posible tratar una función como si de un valor se
+    tratase. Por tanto, una función puede ser utilizada para definir
+    el valor de una variable o para pasarse como parámetro a otras
+    funciones (ver diapositiva \ref{lst:first-class-repl}).
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \label{lst:first-class-repl}
+  \begin{lstlisting}[language=scala, caption=Funciones como ciudadanos de
+      primera clase]
+scala> def add(a: Int, b: Int): Int = a + b
+add: (a: Int, b: Int)Int
+
+scala> val addV1: (Int, Int) => Int = add
+addV1: (Int, Int) => Int = <function2>
+
+scala> addV1(1, 2)
+res0: Int = 3
+
+scala> val addV2 = add _
+addV2: (Int, Int) => Int = <function2>
+
+scala> addV2(1, 2)
+res1: Int = 3
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Funciones de orden superior}
+    Una función de orden superior es aquella que cumple al menos una
+    de las siguientes condiciones:
+    \begin{itemize}
+    \item Toma al menos una función como entrada
+    \item Devuelve una función como salida
+    \end{itemize}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \label{lst:higher-order-repl}
+  \begin{lstlisting}[language=scala, caption=Funciones de orden
+      superior]
+scala> def add(a: Int, b: Int): Int = a + b
+add: (a: Int, b: Int)Int
+
+scala> def mul(a: Int, b: Int): Int = a * b
+mul: (a: Int, b: Int)Int
+
+scala> def reduce(pair: (Int, Int), f: (Int, Int) => Int): Int = 
+     |   f(pair._1, pair._2)
+reduce: (pair: (Int, Int), f: (Int, Int) => Int)Int
+
+scala> reduce((3, 2), add)
+res0: Int = 5
+
+scala> reduce((3, 2), mul)
+res1: Int = 6
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Funciones anónimas o expresiones lambda}
+    En Scala, el trabajo con funciones es tan frecuente que surge la
+    necesidad de contar con funciones anónimas que puedan definirse
+    \emph{inline} con una sintaxis ligera. Estas funciones también son
+    conocidas como expresiones lambda.
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \label{lst:lambda-repl}
+  \begin{lstlisting}[language=scala, caption=Uso de funciones anónimas]
+scala> val add: (Int, Int) => Int = (a: Int, b: Int) => a + b
+add: (Int, Int) => Int = <function2>
+
+scala> val add2: (Int, Int) => Int = (a, b) => a + b
+add2: (Int, Int) => Int = <function2>
+
+scala> val add3: (Int, Int) => Int = _ + _
+add3: (Int, Int) => Int = <function2>
+
+scala> def reduce(pair: (Int, Int), f: (Int, Int) => Int): Int = f(pair._1, pair._2)
+reduce: (pair: (Int, Int), f: (Int, Int) => Int)Int
+
+scala> reduce((5, 3), (a, b) => a * b)
+res0: Int = 15
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Variadic Function}
+    Hay funciones que pueden invocarse con un número variable de
+    argumentos. Tales funciones son conocidas como \emph{variadic
+      function} y pueden llegar a resultar muy útiles en diversos
+    contextos (ver diapositiva \ref{lst:variadic-repl}).
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  %% Incluso el constructor List es una función variadic
+
+  \label{lst:variadic-repl}
+  \begin{lstlisting}[language=scala, caption=Declaración y uso de una
+      función variadic]
+scala> def add(xs: Int*) = xs.fold(0)(_ + _)
+add: (xs: Int*)Int
+
+scala> add(1, 2)
+res0: Int = 3
+
+scala> add(1, 2, 3, 4, 5)
+res1: Int = 15
+
+scala> val l = List(1, 2, 3, 4, 5)
+l: List[Int] = List(1, 2, 3, 4, 5)
+
+scala> add(l:_*)
+res3: Int = 15
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Función con múltiples listas de argumentos}
+    Hasta ahora todas las funciones que hemos visto tienen una única
+    lista de argumentos de entrada. Scala nos permite que podamos
+    desplegar varias listas. Esto, que a priori puede resultar de poca
+    utilidad, tiene aplicación en ciertas situaciones:
+    \begin{itemize}
+    \item En el trabajo con implícitos (que veremos en el T3)
+    \item Para ayudar al compilador con la inferencia de tipos
+    \item Si queremos utilizar la técnica de \emph{currifying}, que
+      veremos en el siguiente apartado.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \label{lst:multiple-args-repl}
+  \begin{lstlisting}[language=scala, caption=Función con múltiples
+      listas de argumentos]
+scala> def add(a: Int)(b: Int)(c: Int, d: Int): Int = 
+     |   a + b + c + d
+add: (a: Int)(b: Int)(c: Int, d: Int)Int
+
+scala> add(1)(2)(3, 4)
+res4: Int = 10
+  \end{lstlisting}
+\end{frame}
 
 %% Currificación
 
@@ -271,9 +464,11 @@ object HolaMundo {
 
 %% Funciones Polimórficas
 
+%% Documentación de funciones (Scala List vs Java ArrayList)
+
 \section{Tipos algebraicos de datos (ADTs)}
 
-%% objects y case classes
+%% objects y case classes (apply, unapply...)
 
 %% pattern matching
 
@@ -282,6 +477,8 @@ object HolaMundo {
 %% Ejemplos: Option y List
 
 \section{Ejemplo: Plegando Listas}
+
+%% Funciones recursivas
 
 %% Implementando fold, foldLeft y foldRight
 
