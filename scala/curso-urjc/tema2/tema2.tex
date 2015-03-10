@@ -1,0 +1,634 @@
+\documentclass[pdftex,hyperref]{beamer}
+
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{amssymb}
+\usepackage{colortbl}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{bibentry}
+\usepackage{listings}
+\usepackage{tabularx}
+
+\definecolor{linkblue}{RGB}{49,57,174}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstdefinelanguage{scala}{
+  morekeywords={abstract,annotation,case,catch,class,def,%
+    do,else,extends,false,final,finally,%
+    for,if,implicit,import,match,mixin,%
+    new,null,object,override,package,%
+    private,protected,requires,return,sealed,%
+    super,this,throw,trait,true,try,%
+    type,val,var,while,with,yield,
+    macro},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[n]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]"""
+}
+\lstset{frame=tb,
+  language=scala,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true
+  tabsize=3
+}
+
+% Configuracion del documento PDF.
+\hypersetup{
+  pdfcreator=Jesús López González,
+  backref%,
+  %%pdfpagemode=FullScreen
+}
+
+% Configuracion pagina principal
+
+\title{\textbf{Programación Funcional en Scala}}
+\subtitle{\textbf{ -- Tema 2 (Parte I) -- \\ Introducción a la Programación Funcional }}
+\author[Jesús López González]{Jesús López González\\jesus.lopez@hablapps.com}
+\institute[@jeslg]{Programación Funcional en Scala\\ Habla Computing}
+\date{Cursos ETSII-URJC 2015}
+
+% Eleccion estilo de la presentacion
+
+\mode<presentation>
+{
+ \usetheme{Madrid}
+ \setbeamercovered{transparent}
+}
+
+\def\newblock{\hskip .11em plus .33em minus .07em}
+
+% Configuracion del logo de la imagen
+
+\subject{Talks}
+
+\pgfdeclareimage[height=0.5cm]{university-logo}{images/logoURJC}
+\logo{\pgfuseimage{university-logo}}
+
+\setcounter{tocdepth}{1}
+
+%NOANIMACION
+\beamerdefaultoverlayspecification{}
+
+% Volver a recordar tabla de contenidos en subsecciones
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>{Índice}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\nobibliography* 
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\section{¿Qué es la Programación Funcional?}
+
+\begin{frame}[fragile]
+  \frametitle{¿Qué es la Programación Funcional?}
+
+  \begin{block}{Efectos de Lado}
+    Se dice que una función tiene efectos de lado si, además de
+    devolver un valor, modifica algún estado o interactúa visiblemente
+    con el mundo externo.
+  \end{block}
+
+  \begin{block}{Ejemplos}
+    \begin{itemize}
+    \item Modificar una variable global
+    \item Invocar un \emph{setter}
+    \item Lanzar una excepción
+    \item Imprimir una traza por la consola
+    \item Actualizar un dato en una BBDD
+    \item Invocar un servicio web externo
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{¿Qué es la Programación Funcional?}
+
+  \begin{block}{Paradigma Funcional y Pureza}
+    La programación funcional se basa en una única premisa: programar
+    con \emph{funciones puras}. Una función pura es aquella que no
+    tiene efectos de lado y que para una misma entrada siempre
+    devolverá la misma salida (mapeo de valores).
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Ejemplo de función pura]
+def add(a: Int, b: Int): Int = a + b
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{¿Qué es la Programación Funcional?}
+
+  \begin{block}{Transparencia Referencial y Modelo de Sustitución} 
+    Se dice que una expresión es \emph{referentially transparent} si
+    tras reemplazarla por el valor que devuelve, no se aprecia ningún
+    cambio en el comportamiento del programa. Esta cualidad activa un
+    nuevo modo de evaluar nuestros programas: \emph{el modelo de
+      sustitución}. Y es que cuando contamos con la transparencia
+    referencial podemos razonar sobre nuestros programas como si se
+    tratasen de expresiones algebraicas.
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Aplicando el modelo de
+      sustitución sobre una expresión]
+def add(a: Int, b: Int): Int = a + b
+
+add(add(1, 2), add(add(4, 5), 6))
+add(3, add(add(4, 5), 6))
+add(3, add(9, 6))
+add(3, 15)
+18
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{¿Qué es la Programación Funcional?}
+
+  \begin{lstlisting}[language=scala, caption=¿Es una función pura?]
+var lastAdd: Int = 0
+
+def add2(a: Int, b: Int): Int = {
+  val res = a + b
+  lastAdd = res
+  res
+}
+
+// Puedes apoyarte en el siguiente programa...
+
+add2(1, 2)
+doSomething(lastAdd)
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{¿Qué es la Programación Funcional?}
+
+  \begin{lstlisting}[language=scala, caption=¿Y esta función?]
+def add3(a: Int, b: Int): Int = {
+  println(s"Adding $a and $b")
+  a + b
+}
+  \end{lstlisting}
+
+  \begin{lstlisting}[language=scala, caption=¿Y ésta otra?]
+def add4(a: Int, b: Int): Int = {
+  var res = a + b
+  res = res - 1
+  res = res + 1
+  res
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{¿Qué es la Programación Funcional?}
+
+  \begin{block}{¿Por qué preocuparnos por el Paradigma Funcional?}
+    
+    % Hablar sobre la historia de la programación funcional
+
+    \begin{itemize}
+      \item Eficiencia / Escalabilidad (multi-cores, Big Data)
+      \item Modularidad (reusabilidad, composición\ldots)
+      \item Testability (property-based testing)
+      \item Comprensibilidad (estructura, funcionamiento,
+        depuración\ldots)
+    \end{itemize}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{¿Qué es la Programación Funcional?}
+
+  \begin{block}{¿Y por qué preocuparnos por Scala?}
+    \begin{itemize}
+      \item Multiparadigma e Impuro (\emph{Scala as a better Java})
+      \item Lenguaje JVM estáticamente tipado
+      \item Más que un lenguaje, un ecosistema (Play, Akka,
+        Spark\ldots)
+    \end{itemize}
+  \end{block}
+
+  %% Explicación del tipo Unit (tuplas) ¿Realmente podemos ser puros?
+  %% Impureza de Scala
+
+  \begin{lstlisting}[language=scala, caption=Hola Mundo en Scala]
+object HolaMundo {
+  def main(args: Array[String]): Unit = {
+    println("¡Hola Mundo!")
+  }
+}
+  \end{lstlisting}
+\end{frame}
+
+\section{Funciones en Scala}
+
+\begin{frame}
+  \frametitle{Funciones en Scala}
+
+  \begin{center}
+    \includegraphics[width=0.5\linewidth]{images/functions-everywhere.jpg}
+  \end{center}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Definición de Función}
+    Una \textbf{función} es un dispositivo computacional componible
+    que permite exclusivamente transformar valores de entrada en
+    valores de salida.
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Nuestra ya conocida
+      función add]
+def add(a: Int, b: Int): Int = a + b
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Funciones como ciudadanos de primera clase}
+    En Scala, es posible tratar una función como si de un valor se
+    tratase. Por tanto, una función puede ser utilizada para definir
+    el valor de una variable o para pasarse como parámetro a otras
+    funciones (ver diapositiva \ref{lst:first-class-repl}).
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \label{lst:first-class-repl}
+  \begin{lstlisting}[language=scala, caption=Funciones como ciudadanos de
+      primera clase]
+scala> def add(a: Int, b: Int): Int = a + b
+add: (a: Int, b: Int)Int
+
+scala> val addV1: (Int, Int) => Int = add
+addV1: (Int, Int) => Int = <function2>
+
+scala> addV1(1, 2)
+res0: Int = 3
+
+scala> val addV2 = add _
+addV2: (Int, Int) => Int = <function2>
+
+scala> addV2(1, 2)
+res1: Int = 3
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Funciones de orden superior}
+    Una función de orden superior es aquella que cumple al menos una
+    de las siguientes condiciones:
+    \begin{itemize}
+    \item Toma al menos una función como entrada
+    \item Devuelve una función como salida
+    \end{itemize}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \label{lst:higher-order-repl}
+  \begin{lstlisting}[language=scala, caption=Funciones de orden
+      superior]
+scala> def add(a: Int, b: Int): Int = a + b
+add: (a: Int, b: Int)Int
+
+scala> def mul(a: Int, b: Int): Int = a * b
+mul: (a: Int, b: Int)Int
+
+scala> def reduce(pair: (Int, Int), f: (Int, Int) => Int): Int = 
+     |   f(pair._1, pair._2)
+reduce: (pair: (Int, Int), f: (Int, Int) => Int)Int
+
+scala> reduce((3, 2), add)
+res0: Int = 5
+
+scala> reduce((3, 2), mul)
+res1: Int = 6
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Funciones anónimas o expresiones lambda}
+    En Scala, el trabajo con funciones es tan frecuente que surge la
+    necesidad de contar con funciones anónimas que puedan definirse
+    \emph{inline} con una sintaxis ligera. Estas funciones también son
+    conocidas como expresiones lambda.
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \label{lst:lambda-repl}
+  \begin{lstlisting}[language=scala, caption=Uso de funciones anónimas]
+scala> val add: (Int, Int) => Int = (a: Int, b: Int) => a + b
+add: (Int, Int) => Int = <function2>
+
+scala> val add2: (Int, Int) => Int = (a, b) => a + b
+add2: (Int, Int) => Int = <function2>
+
+scala> val add3: (Int, Int) => Int = _ + _
+add3: (Int, Int) => Int = <function2>
+
+scala> def reduce(pair: (Int, Int), f: (Int, Int) => Int): Int = f(pair._1, pair._2)
+reduce: (pair: (Int, Int), f: (Int, Int) => Int)Int
+
+scala> reduce((5, 3), (a, b) => a * b)
+res0: Int = 15
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Variadic Function}
+    Hay funciones que pueden invocarse con un número variable de
+    argumentos. Tales funciones son conocidas como \emph{variadic
+      function} y pueden llegar a resultar muy útiles en diversos
+    contextos (ver diapositiva \ref{lst:variadic-repl}).
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  %% Incluso el constructor List es una función variadic
+  %% List(List(1, 2, 3, 4, 5): _*)
+
+  \label{lst:variadic-repl}
+  \begin{lstlisting}[language=scala, caption=Declaración y uso de una
+      función variadic]
+scala> def add(xs: Int*) = xs.fold(0)(_ + _)
+add: (xs: Int*)Int
+
+scala> add(1, 2)
+res0: Int = 3
+
+scala> add(1, 2, 3, 4, 5)
+res1: Int = 15
+
+scala> val l = List(1, 2, 3, 4, 5)
+l: List[Int] = List(1, 2, 3, 4, 5)
+
+scala> add(l:_*)
+res3: Int = 15
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Función con múltiples listas de argumentos}
+    Hasta ahora todas las funciones que hemos visto tienen una única
+    lista de argumentos de entrada. Scala nos permite que podamos
+    desplegar varias listas. Esto, que a priori puede resultar de poca
+    utilidad, tiene aplicación en ciertas situaciones:
+    \begin{itemize}
+    \item En el paso de parámetros implícitamente (que veremos en el
+      T3)
+    \item Para ayudar al compilador con la inferencia de tipos
+    \item Si queremos utilizar la técnica de \emph{currying}, que
+      veremos en el siguiente apartado.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \label{lst:multiple-args-repl}
+  \begin{lstlisting}[language=scala, caption=Función con múltiples
+      listas de argumentos]
+scala> def add(a: Int)(b: Int)(c: Int, d: Int): Int = 
+     |   a + b + c + d
+add: (a: Int)(b: Int)(c: Int, d: Int)Int
+
+scala> add(1)(2)(3, 4)
+res4: Int = 10
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Currying}
+    La currificación consiste en transformar una función que utiliza
+    múltiples argumentos (o más específicamente una n-tupla como
+    argumento) en una función que utiliza un único argumento.
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \label{lst:currying-repl}
+  \begin{lstlisting}[language=scala, caption=Currying nativo en Scala]
+scala> def add(a: Int)(b: Int)(c: Int, d: Int): Int =
+     |   a + b + c + d
+add: (a: Int)(b: Int)(c: Int, d: Int)Int
+
+scala> val f = add(1) _
+f: Int => ((Int, Int) => Int) = <function1>
+
+scala> val g = f(2)
+g: (Int, Int) => Int = <function2>
+
+scala> g(3, 4)
+res0: Int = 10
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  %% a => b => f(a, b)
+  \begin{block}{Ejercicio 1}
+    Implementa la función \emph{def curry}, cuya signature se muestra
+    en la siguiente sesión REPL.
+  \end{block}
+
+  \label{lst:def-curry-repl}
+  \begin{lstlisting}[language=scala, caption=Implementando nuestra
+      propia función de currificación]
+scala> def curry(f: (Int, Int) => Int): Int => Int => Int = ???
+curry: (f: (Int, Int) => Int)Int => (Int => Int)
+
+scala> def add(x: Int, y: Int) = x + y
+add: (x: Int, y: Int)Int
+
+scala> val f = curry(add)
+f: Int => (Int => Int) = <function1>
+
+scala> f(1)(2)
+res0: Int = 3
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  %% Habla de la restricción de dominios y codominios
+
+  %% ¿Cómo se implementa el método compose?
+
+  %% Notación infija, la veremos más adelante
+
+  \begin{block}{Composición de Funciones}
+    De manera informal, podemos definir la composición de funciones
+    como la aplicación de una función al resultado de otra.
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Composición nativa de
+      funciones show y double]
+scala> val double: Int => Int = x => x * 2
+double: Int => Int = <function1>
+
+scala> val show: Int => String = x => x.toString
+show: Int => String = <function1>
+
+scala> val showDouble = show compose double
+showDouble: Int => String = <function1>
+
+scala> showDouble(2)
+res0: String = 4
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Ejercicio 2}
+    Implementa la función \emph{compose}, cuya signatura se muestra en
+    la siguiente sesión REPL.
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Uso de nuestra propia
+      función de composición (prefija)]
+scala> def compose(f: Int => String, g: Int => Int): Int => String = ???
+compose: (f: Int => String, g: Int => Int)Int => String
+
+scala> val showDouble = compose(show, double)
+showDouble: Int => String = <function1>
+
+scala> showDouble(4)
+res0: String = 8
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{block}{Función Polimórfica}
+    Las funciones en Scala pueden estar parametrizadas con valores y
+    con tipos. Ya sabemos que los parámetros valor se definen entre
+    paréntesis. Por su parte, los parámetros tipo se declaran entre
+    corchetes. Los parámetros tipo nos permiten abstraer un
+    comportamiento recurrente. De esta manera, una única
+    implementación podría ser suficiente para cubrir un gran número de
+    casos.
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  \begin{lstlisting}[language=scala, caption=Función polimórfica add]
+scala> def add[A](x: A, y: A)(f: (A, A) => A): A = f(x, y)
+add: [A](x: A, y: A)(f: (A, A) => A)A
+
+scala> add(1, 2)(_ + _)
+res0: Int = 3
+
+scala> add("hola", "mundo")(_ + _)
+res1: String = holamundo
+
+scala> add(List(1, 2, 3), List(4, 5, 6))(_ ++ _)
+res2: List[Int] = List(1, 2, 3, 4, 5, 6)
+  \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+%% scala> def curry[A, B, C](f: (A, B) => C): A => B => C =
+%%      |   a => b => f(a, b)
+%% curry: [A, B, C](f: (A, B) => C)A => (B => C)
+
+%% scala> def compose[A, B, C](g: B => C, f: A => B): A => C =
+%%      |   a => g(f(a))
+%% compose: [A, B, C](g: B => C, f: A => B)A => C
+
+  \begin{block}{Ejercicio 3}
+    Implementa las funciones \emph{curry} y \emph{compose} de forma
+    polimórfica y demuestra su correcto funcionamiento con varios
+    escenarios. ¿Cuántos parámetros tipo te hacen falta para
+    implementar cada una de estas funciones?
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funciones en Scala}
+
+  %% Documentación de funciones (Scala List vs Java ArrayList)
+
+  \begin{center}
+    \includegraphics[width=0.9\linewidth]{images/propuesta-meetup.png}
+  \end{center}
+\end{frame}
+
+\end{document} 
