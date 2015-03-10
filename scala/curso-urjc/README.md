@@ -64,7 +64,7 @@ tutoriales de dudosa calidad. En este curso, se pretende introducir el
 concepto a base de varios ejemplos que parten de una motivación, y
 sólo después encontrar el patrón común que les une a todos ellos.
 
-### Efectos, EDSLs e Interpretación (8 y 10 de abril)
+### Efectos, EDSLs e Interpretación
 
 Uno de los puntos fuertes de la programación funcional es el de la
 separación de conceptos. Veremos cómo la distinción entre
