@@ -110,11 +110,246 @@
   \titlepage
 \end{frame}
 
-\section{Tipos algebraicos de datos (ADTs)}
+\section{Objects and Case Classes}
 
-%% objects y case classes (apply, unapply...)
+\begin{frame}[fragile]
+  \frametitle{Objects and Case Classes}
 
-%% pattern matching
+  %% keyword static en Java
+  %% instanciar algún objeto y añadirle una función
+
+  \begin{block}{Objects}
+    Scala tiene objetos \emph{singleton}, que podemos entender como
+    una clase que tiene una única instancia. Se declaran utilizando la
+    palabra reservada \textbf{object}. ¡Ya vimos un ejemplo cuando
+    creamos nuestro primer programa en Scala!
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Hola Mundo en Scala]
+object HolaMundo extends App {
+  println("¡Hola Mundo!")
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Objects and Case Classes}
+
+  %% distinción de espacio de nombres para tipos y valores: ejemplo
+  %% con val y class
+
+  \begin{block}{Companion Objects}
+    Un \emph{companion object} es un objeto que tiene el mismo nombre
+    que un tipo de datos, dónde suelen declararse ciertos métodos que
+    crean o trabajan con valores de dicho tipo de datos.
+  \end{block}
+
+  %% ¡Nos sale más rentable invocar directamente al constructor!
+
+  \begin{lstlisting}[language=scala, caption=Companion Object para la
+      clase Alumno]
+class Alumno(val nombre: String, val apellidos: String, val edad: Int)
+
+object Alumno {
+  def crear(nombre: String, apellidos: String, edad: Int): Alumno =
+    new Alumno(nombre, apellidos, edad)
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Objects and Case Classes}
+
+  \begin{block}{Método apply}
+    El método \emph{apply} es un método especial que te permite tener
+    una sintaxis más agradable cuando una clase o un objeto tienen un
+    uso principal. Para nuestro ejemplo, el uso principal del
+    companion object es el de crear objetos.
+  \end{block}
+
+  %% Mostrar la ganancia que obtenemos por usar el método apply
+  %% Ver el uso del método apply (tanto en su companion object como en
+  %% su clase)
+
+  \begin{lstlisting}[language=scala, caption=Usando el método apply
+      como constructor]
+class Alumno(val nombre: String, val apellidos: String, val edad: Int)
+
+object Alumno {
+  def apply(nombre: String, apellidos: String, edad: Int): Alumno =
+    new Alumno(nombre, apellidos, edad)
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Objects and Case Classes}
+
+  \begin{block}{Método unapply}
+    En la programación funcional, al igual que existen
+    \emph{constructores}, que recolectan las partes del objeto para
+    proceder a su creación, también existen \emph{extractores}, que
+    dado un objeto instanciado, nos devuelve las partes que se
+    utilizaron en su construcción. En Scala, es tan habitual utilizar
+    el método \emph{apply} para construir objetos, que se utilizó el
+    nombre \emph{unapply} como método especial que implementa la
+    extracción.
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Objects and Case Classes}
+
+  \begin{lstlisting}[language=scala, caption=Declaración de apply y
+      unapply en el object Alumno]
+class Alumno(val nombre: String, val apellidos: String, val edad: Int)
+
+object Alumno {
+  def apply(nombre: String, apellidos: String, edad: Int): Alumno =
+    new Alumno(nombre, apellidos, edad)
+
+  def unapply(alumno: Alumno): Option[(String, String, Int)] =
+    Some((alumno.nombre, alumno.apellidos, alumno.edad))
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Objects and Case Classes}
+
+  \begin{block}{Case Classes}
+    \emph{``Las \textbf{case classes} son clases regulares que
+      exportan los parámetros de sus constructores y ofrecen un
+      mecanismo de decomposición recursiva mediante \textbf{pattern
+        matching}.''} En definitiva son clases que generan
+    automáticamente un companion object y una implementación para los
+    métodos apply y unapply, entre otras muchas cosas.
+  \end{block}
+
+  %% No hace falta 'val' para las case classes
+
+  \begin{lstlisting}[language=scala, caption=Alumno en su versión case
+    class]
+case class Alumno(nombre: String, apellidos: String, edad: Int)
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Objects and Case Classes}
+
+  \begin{lstlisting}[language=scala, caption=Jugando con la case class
+    Alumno]
+scala> case class Alumno(nombre: String, apellidos: String, edad: Int)
+defined class Alumno
+
+scala> val pepe = Alumno("Pepe", "Pérez", 40)
+pepe: Alumno = Alumno(Pepe,Pérez,40)
+
+scala> val Alumno(nm, ap, ed) = pepe
+nm: String = Pepe
+ap: String = Pérez
+ed: Int = 40
+  \end{lstlisting}
+\end{frame}
+
+\section{Pattern Matching}
+
+\begin{frame}[fragile]
+  \frametitle{Pattern Matching}
+  
+  \begin{block}{¿Qué es el Pattern Matching?}
+    Scala trae consigo un mecanismo genérico de \emph{pattern
+      matching} (coincidencia de patrones). Permite hacer matching con
+    cualquier tipo de dato bajo una política \emph{first-match}.
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Objects and Case Classes}
+
+  %% muy similar al switch de Java
+
+  \begin{lstlisting}[language=scala, caption=Pattern Matching sobre un
+    Int]
+scala> def f(i: Int): String = i match {
+     |   case 1 => "uno"
+     |   case 2 => "dos"
+     |   case _ => "otro"
+     | }
+f: (i: Int)String
+
+scala> f(1)
+res0: String = uno
+
+scala> f(3)
+res1: String = otro
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Pattern Matching}
+  
+  \begin{block}{Patrones}
+    El verdadero poder del Pattern Matching en Scala viene por la gran
+    expresividad que permiten sus patrones. Los extractores (case
+    classes) nos permiten explotar muy bien dichos patrones.
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Pattern Matching}
+
+  \begin{lstlisting}[language=scala, caption=Ejemplos de patrones]
+scala> case class Identificacion(nombre: String, apellidos: String)
+defined class Identificacion
+
+scala> case class Alumno(id: Identificacion, edad: Int)
+defined class Alumno
+
+scala> def esCandidato(alumno: Alumno): Boolean = alumno match {
+     |   case Alumno(Identificacion("pepe", "perez"), 40) => true
+     |   case Alumno(id@Identificacion("jose", _), _) => true
+     |   case Alumno(_, edad) if (edad <= 35) => true 
+     |   case _ => false
+     | }
+esCandidato: (alumno: Alumno)Boolean
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Pattern Matching}
+
+  \begin{lstlisting}[language=scala, caption=Implementación del método esCandidato]
+scala> def esCandidato(alumno: Alumno): Boolean = alumno match {
+     |   case Alumno(Identificacion("pepe", "perez"), 40) => true
+     |   case Alumno(Identificacion("jose", _), _) => true
+     |   case Alumno(_, edad) if (edad <= 35) => true 
+     |   case _ => false
+     | }
+esCandidato: (alumno: Alumno)Boolean
+  \end{lstlisting}
+
+  \begin{lstlisting}[language=scala, caption=Ejercicio: ¿Quiénes son candidatos?]
+val jose = Alumno(Identificacion("jose", "garcia"), 40)
+val pepe = Alumno(Identificacion("pepe", "perez"), 30)
+val ana = Alumno(Identificacion("ana", "marquez"), 25)
+  \end{lstlisting}
+\end{frame}
+
+\section{Tipos Algebraicos de Datos (ADTs)}
+
+\begin{frame}[fragile]
+  \frametitle{Tipos Algebraicos de Datos}
+
+  \begin{block}{¿Qué es un ADT?}
+    Un ADT es un tipo de datos definido por uno o varios
+    constructores, donde cada uno de ellos puede contar con cero o más
+    argumentos. Así, decimos que el tipo de datos es la suma (o unión)
+    de sus constructores y que cada constructor es el producto de sus
+    argumentos, de ahí el nombre. Ejemplos de ADT podrían ser
+    \emph{Option}, \emph{List}, \emph{Tree}, etc.
+  \end{block}
+\end{frame}
 
 %% inmutabilidad y data sharing
 
