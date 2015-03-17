@@ -12,6 +12,21 @@ object Lista {
     case Cons(x, xs) => Cons(f(x), map(xs)(f))
   }
 
+  def sumList(xs: Lista[Int]): Int = xs match {
+    case Nada => 0
+    case Cons(x, xs) => x + sumList(xs)
+  }
+
+  def mulList(xs: Lista[Int]): Int = xs match {
+    case Nada => 1
+    case Cons(x, xs) => x + mulList(xs)
+  }
+
+  def catList(xs: Lista[String]): String = xs match {
+    case Nada => ""
+    case Cons(x, xs) => x + catList(xs)
+  }
+
   def fold[A](xs: Lista[A])(z: A)(op: (A, A) => A): A = xs match {
     case Nada => z
     case Cons(x, xs) => op(x, fold(xs)(z)(op))
