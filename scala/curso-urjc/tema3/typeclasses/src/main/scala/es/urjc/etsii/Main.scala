@@ -3,6 +3,7 @@ package es.urjc.etsii
 import typeclasses._
 
 object Main extends App {
+
   val michael = Student("Michael", "Scott", Some("funny guy"))
   val buffy = Student("Buffy", "Summers", Some("brave girl"))
   val george = Student("George", "Bluth", Some("magician"))
@@ -19,5 +20,5 @@ object Main extends App {
     if (implicitly[YesNo[A]].yesNo(cond)) `then` else `else`
   }
 
-  println(`if`("hola")(`then` = "Then Case", `else` = "Else Case"))
+  `if`("hola")(`then` = "Then Case", `else` = "Else Case")
 }
