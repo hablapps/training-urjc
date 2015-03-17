@@ -1,0 +1,185 @@
+\documentclass[pdftex,hyperref]{beamer}
+
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{amssymb}
+\usepackage{colortbl}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{bibentry}
+\usepackage{listings}
+\usepackage{tabularx}
+
+\definecolor{linkblue}{RGB}{49,57,174}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstdefinelanguage{scala}{
+  morekeywords={abstract,annotation,case,catch,class,def,%
+    do,else,extends,false,final,finally,%
+    for,if,implicit,import,match,mixin,%
+    new,null,object,override,package,%
+    private,protected,requires,return,sealed,%
+    super,this,throw,trait,true,try,%
+    type,val,var,while,with,yield,
+    macro},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[n]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]"""
+}
+\lstset{frame=tb,
+  language=scala,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true
+  tabsize=3
+}
+
+% Configuracion del documento PDF.
+\hypersetup{
+  pdfcreator=Jesús López González,
+  backref%,
+  %%pdfpagemode=FullScreen
+}
+
+% Configuracion pagina principal
+
+\title{\textbf{Programación Funcional en Scala}}
+\subtitle{\textbf{ -- Tema 3 -- \\ Constructores de Tipos, Type Classes y Funtores }}
+\author[Jesús López González]{Jesús López González\\jesus.lopez@hablapps.com}
+\institute[@jeslg]{Programación Funcional en Scala\\ Habla Computing}
+\date{Cursos ETSII-URJC 2015}
+
+% Eleccion estilo de la presentacion
+
+\mode<presentation>
+{
+ \usetheme{Madrid}
+ \setbeamercovered{transparent}
+}
+
+\def\newblock{\hskip .11em plus .33em minus .07em}
+
+% Configuracion del logo de la imagen
+
+\subject{Talks}
+
+\pgfdeclareimage[height=0.5cm]{university-logo}{images/logoURJC}
+\logo{\pgfuseimage{university-logo}}
+
+\setcounter{tocdepth}{1}
+
+%NOANIMACION
+\beamerdefaultoverlayspecification{}
+
+% Volver a recordar tabla de contenidos en subsecciones
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>{Índice}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\nobibliography* 
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\section{Higher Kinded Types}
+
+\begin{frame}[fragile]
+  \frametitle{Higher Kinded Types}
+
+  \begin{block}{Constructor de Tipos}
+    Un constructor de tipos es un tipo que recibe argumentos tipo para
+    construir un nuevo tipo. Ejemplos de constructores de tipo pueden
+    ser \emph{List} (recibe un argumento tipo), \emph{Option} (recibe
+    un argumento tipo) o \emph{Map} (recibe dos argumentos tipo).
+  \end{block}
+
+  %% Option no puede usarse como tal, se requieren parámetros tipo.
+
+  \begin{lstlisting}[language=scala, caption=Usando constructores de tipo]
+scala> val opt: Option[Int] = Some(3)
+opt: Option[Int] = Some(3)
+
+scala> val lst: List[String] = List("how", "are", "you")
+lst: List[String] = List(how, are, you)
+
+scala> val map: Map[Int, String] = Map(1 -> "one", 2 -> "two")
+map: Map[Int,String] = Map(1 -> one, 2 -> two)
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Higher Kinded Types}
+
+  \begin{block}{Kinds}
+    \begin{itemize}
+      \item Proper: \emph{(*)} Ej: String, Int, List[Int], etc.
+      \item First-order: \emph{(* -> *)} Ej: Option[\_], List[\_], etc.
+      \item Higher-order: \emph{((* -> *) -> *)} Ej: Functor[F[\_]], etc.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Higher Kinded Types}
+
+  %% Mostrar un ejemplo con Tuple2
+
+  \begin{lstlisting}[language=scala, caption=Usando constructores de tipo]
+scala> def show[C[_, _], A, B](arg: C[A, B]): String = arg.toString
+show: [C[_, _], A, B](arg: C[A,B])String
+
+scala> show(Map(1 -> "one", 2 -> "two"))
+res0: String = Map(1 -> one, 2 -> two)
+
+scala> show(List(1, 2, 3))
+<console>:9: error: inferred kinds of the type arguments (scala.collection.LinearSeqOptimized,Int,List[Int]) do not conform to the expected kinds of the type parameters (type C,type A,type B).
+scala.collection.LinearSeqOptimized's type parameters do not match type C's expected parameters:
+type Repr's bounds <: scala.collection.LinearSeqOptimized[A,Repr] are stricter than type _'s declared bounds >: Nothing <: Any
+              show(List(1, 2, 3))
+              ^
+<console>:9: error: type mismatch;
+ found   : List[Int]
+ required: C[A,B]
+              show(List(1, 2, 3))
+                       ^
+  \end{lstlisting}
+\end{frame}
+
+\section{Implicits}
+
+\section{Type Classes}
+
+\section{Funtores}
+
+\section{Takeaways}
+
+\end{document}
