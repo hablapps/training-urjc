@@ -16,9 +16,9 @@ object Main extends App {
   val res = find(List(michael, buffy, george), Student("Buffy", "Summers"))
   println("RESULT WAS: " + res)
 
-  def `if`[A: YesNo, B](cond: A)(`then`: => B, `else`: => B) = {
-    if (implicitly[YesNo[A]].yesNo(cond)) `then` else `else`
-  }
+  // def `if`[A: YesNo, B](cond: A)(`then`: => B, `else`: => B) {
+  //   if (implicitly[YesNo[A]].yesNo(cond) `then` else `else`
+  // }
 
-  `if`("hola")(`then` = "Then Case", `else` = "Else Case")
+  // `if`("hola")(`then` = true, `else` = false)
 }

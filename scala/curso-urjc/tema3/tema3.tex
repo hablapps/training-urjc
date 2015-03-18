@@ -66,7 +66,7 @@
 % Configuracion pagina principal
 
 \title{\textbf{Programación Funcional en Scala}}
-\subtitle{\textbf{ -- Tema 3 -- \\ Constructores de Tipos, Type Classes y Funtores }}
+\subtitle{\textbf{ -- Tema 3 -- \\ Constructores de Tipos, Typeclasses y Funtores }}
 \author[Jesús López González]{Jesús López González\\jesus.lopez@hablapps.com}
 \institute[@jeslg]{Programación Funcional en Scala\\ Habla Computing}
 \date{Cursos ETSII-URJC 2015}
@@ -139,11 +139,27 @@ map: Map[Int,String] = Map(1 -> one, 2 -> two)
 \begin{frame}[fragile]
   \frametitle{Higher Kinded Types}
 
-  \begin{block}{Kinds}
+  \begin{block}{Kind}
+    El kind es el ``tipo'' de un constructor de tipos.
     \begin{itemize}
       \item Proper: \emph{(*)} Ej: String, Int, List[Int], etc.
       \item First-order: \emph{(* -> *)} Ej: Option[\_], List[\_], etc.
       \item Higher-order: \emph{((* -> *) -> *)} Ej: Functor[F[\_]], etc.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Higher Kinded Types}
+
+  \begin{block}{Ejercicio: ¿Qué kind tienen los siguientes tipos?}
+    \begin{itemize}
+      \item Int
+      \item Option[Int]
+      \item List
+      \item Map
+      \item Map[Int, \_]
+      \item Monad[M[\_]]
     \end{itemize}
   \end{block}
 \end{frame}
@@ -210,6 +226,8 @@ res3: Int = 3
 \begin{frame}[fragile]
   \frametitle{Implicits}
 
+  %% Sólo trabajan con un nivel de conversión
+
   \begin{lstlisting}[language=scala, caption=Implicit Defs]
 scala> case class Point(x: Int, y: Int)
 defined class Point
@@ -272,10 +290,80 @@ serialize2: [A](a: A)(implicit evidence$1: Serializer[A])String
   \end{lstlisting}
 \end{frame}
 
-\section{Type Classes}
+\section{Typeclasses}
 
-\section{Funtores}
+\begin{frame}[fragile]
+  \frametitle{Typeclasses}
+
+  \begin{block}{Typeclasses}
+    \emph{``A typeclass is a sort of interface that defines some behavior. If
+    a type is a part of a typeclass, that means that it supports and
+    implements the behavior the typeclass describes. A lot of people
+    coming from OOP get confused by typeclasses because they think
+    they are like classes in object oriented languages. Well, they're
+    not. You can think of them kind of as Java interfaces, only
+    better.''} (Learn You a Haskell for Great Good)
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Typeclasses}
+
+  \begin{lstlisting}[language=scala, caption=Typeclass Eq]
+trait Eq[A] {
+  def eq(x: A, y: A): Boolean
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Typeclasses}
+
+  \begin{lstlisting}[language=scala, caption=Ejercicio: Implementar la
+      Typeclass YesNo (javascript)]
+trait YesNo[A] {
+  def yesNo(x: A): Boolean
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Typeclasses}
+
+  %% Intuición de ``lift''
+
+  \begin{lstlisting}[language=scala, caption=Typeclass Functor]
+trait Functor[F[_]] {
+  def map[A, B](f: A => B)(value: F[A]): F[B]
+}
+  \end{lstlisting}
+\end{frame}
 
 \section{Takeaways}
+
+\begin{frame}
+  \frametitle{Takeaways}
+
+  \begin{block}{}
+    Hemos descubierto el concepto \emph{kind} que nos permite conocer
+    el tipo de un constructor de tipos.
+  \end{block}
+
+  \begin{block}{}
+    Hemos trabajado con implícitos, permitiendo al compilador el que
+    pueda tomar ciertas decisiones por nosotros, para facilitar
+    nuestro trabajo.
+  \end{block}
+
+  \begin{block}{}
+    Hemos visto qué es una \emph{typeclass} y cómo se realiza su
+    implementación en Scala.
+  \end{block}
+
+  \begin{block}{}
+    Sabemos qué forma tiene un \emph{functor}. Desarrollaremos el
+    concepto en más profundidad durante las próximas clases.
+  \end{block}
+\end{frame}
 
 \end{document}
