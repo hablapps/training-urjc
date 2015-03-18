@@ -1,0 +1,369 @@
+\documentclass[pdftex,hyperref]{beamer}
+
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{amssymb}
+\usepackage{colortbl}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{bibentry}
+\usepackage{listings}
+\usepackage{tabularx}
+
+\definecolor{linkblue}{RGB}{49,57,174}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstdefinelanguage{scala}{
+  morekeywords={abstract,annotation,case,catch,class,def,%
+    do,else,extends,false,final,finally,%
+    for,if,implicit,import,match,mixin,%
+    new,null,object,override,package,%
+    private,protected,requires,return,sealed,%
+    super,this,throw,trait,true,try,%
+    type,val,var,while,with,yield,
+    macro},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[n]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]"""
+}
+\lstset{frame=tb,
+  language=scala,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true
+  tabsize=3
+}
+
+% Configuracion del documento PDF.
+\hypersetup{
+  pdfcreator=Jesús López González,
+  backref%,
+  %%pdfpagemode=FullScreen
+}
+
+% Configuracion pagina principal
+
+\title{\textbf{Programación Funcional en Scala}}
+\subtitle{\textbf{ -- Tema 3 -- \\ Constructores de Tipos, Typeclasses y Funtores }}
+\author[Jesús López González]{Jesús López González\\jesus.lopez@hablapps.com}
+\institute[@jeslg]{Programación Funcional en Scala\\ Habla Computing}
+\date{Cursos ETSII-URJC 2015}
+
+% Eleccion estilo de la presentacion
+
+\mode<presentation>
+{
+ \usetheme{Madrid}
+ \setbeamercovered{transparent}
+}
+
+\def\newblock{\hskip .11em plus .33em minus .07em}
+
+% Configuracion del logo de la imagen
+
+\subject{Talks}
+
+\pgfdeclareimage[height=0.5cm]{university-logo}{images/logoURJC}
+\logo{\pgfuseimage{university-logo}}
+
+\setcounter{tocdepth}{1}
+
+%NOANIMACION
+\beamerdefaultoverlayspecification{}
+
+% Volver a recordar tabla de contenidos en subsecciones
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>{Índice}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\nobibliography* 
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\section{Higher Kinded Types}
+
+\begin{frame}[fragile]
+  \frametitle{Higher Kinded Types}
+
+  \begin{block}{Constructor de Tipos}
+    Un constructor de tipos es un tipo que recibe argumentos tipo para
+    construir un nuevo tipo. Ejemplos de constructores de tipo pueden
+    ser \emph{List} (recibe un argumento tipo), \emph{Option} (recibe
+    un argumento tipo) o \emph{Map} (recibe dos argumentos tipo).
+  \end{block}
+
+  %% Option no puede usarse como tal, se requieren parámetros tipo.
+
+  \begin{lstlisting}[language=scala, caption=Usando constructores de tipo]
+scala> val opt: Option[Int] = Some(3)
+opt: Option[Int] = Some(3)
+
+scala> val lst: List[String] = List("how", "are", "you")
+lst: List[String] = List(how, are, you)
+
+scala> val map: Map[Int, String] = Map(1 -> "one", 2 -> "two")
+map: Map[Int,String] = Map(1 -> one, 2 -> two)
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Higher Kinded Types}
+
+  \begin{block}{Kind}
+    El kind es el ``tipo'' de un constructor de tipos.
+    \begin{itemize}
+      \item Proper: \emph{(*)} Ej: String, Int, List[Int], etc.
+      \item First-order: \emph{(* -> *)} Ej: Option[\_], List[\_], etc.
+      \item Higher-order: \emph{((* -> *) -> *)} Ej: Functor[F[\_]], etc.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Higher Kinded Types}
+
+  \begin{block}{Ejercicio: ¿Qué kind tienen los siguientes tipos?}
+    \begin{itemize}
+      \item Int
+      \item Option[Int]
+      \item List
+      \item Map
+      \item Map[Int, \_]
+      \item Monad[M[\_]]
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Higher Kinded Types}
+
+  %% Mostrar un ejemplo con Tuple2
+
+  \begin{lstlisting}[language=scala, caption=Función show recibe un
+      constructor de tipos C (* -> * -> *)]
+scala> def show[C[_, _], A, B](arg: C[A, B]): String = arg.toString
+show: [C[_, _], A, B](arg: C[A,B])String
+
+scala> show(Map(1 -> "one", 2 -> "two"))
+res0: String = Map(1 -> one, 2 -> two)
+
+scala> show(List(1, 2, 3))
+<console>:9: error: inferred kinds of the type arguments (scala.collection.LinearSeqOptimized,Int,List[Int]) do not conform to the expected kinds of the type parameters (type C,type A,type B).
+  \end{lstlisting}
+\end{frame}
+
+\section{Implicits}
+
+\begin{frame}
+  \frametitle{Implicits}
+
+  \begin{block}{Intuición}
+    Por norma general, los programadores trabajamos de forma
+    explícita. Cuando queremos aplicar una función indicamos de forma
+    muy clara cuáles son los parámetros de entrada. Además, cuando
+    queremos invocar una función, dejamos plasmada nuestra intención
+    de hacerlo en el código. Scala trae consigo varias técnicas para
+    trabajar de forma implícita, que permiten al compilador tomar
+    decisiones de forma autónoma, siempre tratando de intuir las
+    intenciones del programador. Podemos diferenciar tres grupos:
+    \begin{itemize}
+      \item Implicit Parameters
+      \item Implicit Defs
+      \item Implicit Classes
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Implicits}
+
+  \begin{lstlisting}[language=scala, caption=Implicit Parameters]
+scala> def add(a: Int)(implicit b: Int): Int = a + b
+add: (a: Int)(implicit b: Int)Int
+
+scala> add(1)(2)
+res2: Int = 3
+
+scala> implicit val x: Int = 2
+x: Int = 2
+
+scala> add(1)
+res3: Int = 3
+  \end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Implicits}
+
+  %% Sólo trabajan con un nivel de conversión
+
+  \begin{lstlisting}[language=scala, caption=Implicit Defs]
+scala> case class Point(x: Int, y: Int)
+defined class Point
+
+scala> implicit def tupleToPoint(tuple: (Int, Int)): Point =
+     |   Point(tuple._1, tuple._2)
+tupleToPoint: (tuple: (Int, Int))Point
+
+scala> val p1: Point = tupleToPoint((1, 2))
+p1: Point = Point(1,2)
+
+scala> val p2: Point = (1, 2)
+p2: Point = Point(1,2)
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Implicits}
+
+  \begin{lstlisting}[language=scala, caption=Implicit Classes]
+scala> implicit class IntExtender(val i: Int) {
+     |   def myNewDef: String = "Def not implemented for Int"
+     | }
+defined class IntExtender
+
+scala> 33.myNewDef
+res0: String = Def not implemented for Int
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Implicits}
+
+  \begin{block}{Implícitos y Constructores de Tipos}
+    Existe una notación especial para lidiar con constructores de
+    tipos e implícitos bajo una sintaxis más dulcificada. Tal notación
+    es conocida como \emph{context bound} y es muy útil para proveer a
+    la función de ciertas evidencias que resultan necesarias para su
+    aplicación.
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Implicits}
+
+  \begin{lstlisting}[language=scala, caption=Dulcificación de
+      evidencias implícitas en serialize2]
+scala> trait Serializer[A] {
+     |   def serialize(a: A): String
+     | }
+defined trait Serializer
+
+scala> def serialize[A](a: A)(implicit ev: Serializer[A]): String =
+     |   ev.serialize(a)
+serialize: [A](a: A)(implicit ev: Serializer[A])String
+
+scala> def serialize2[A: Serializer](a: A): String =
+     |   implicitly[Serializer[A]].serialize(a)
+serialize2: [A](a: A)(implicit evidence$1: Serializer[A])String
+  \end{lstlisting}
+\end{frame}
+
+\section{Typeclasses}
+
+\begin{frame}[fragile]
+  \frametitle{Typeclasses}
+
+  \begin{block}{Typeclasses}
+    \emph{``A typeclass is a sort of interface that defines some behavior. If
+    a type is a part of a typeclass, that means that it supports and
+    implements the behavior the typeclass describes. A lot of people
+    coming from OOP get confused by typeclasses because they think
+    they are like classes in object oriented languages. Well, they're
+    not. You can think of them kind of as Java interfaces, only
+    better.''} (Learn You a Haskell for Great Good)
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Typeclasses}
+
+  \begin{lstlisting}[language=scala, caption=Typeclass Eq]
+trait Eq[A] {
+  def eq(x: A, y: A): Boolean
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Typeclasses}
+
+  \begin{lstlisting}[language=scala, caption=Ejercicio: Implementar la
+      Typeclass YesNo (javascript)]
+trait YesNo[A] {
+  def yesNo(x: A): Boolean
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Typeclasses}
+
+  %% Intuición de ``lift''
+
+  \begin{lstlisting}[language=scala, caption=Typeclass Functor]
+trait Functor[F[_]] {
+  def map[A, B](f: A => B)(value: F[A]): F[B]
+}
+  \end{lstlisting}
+\end{frame}
+
+\section{Takeaways}
+
+\begin{frame}
+  \frametitle{Takeaways}
+
+  \begin{block}{}
+    Hemos descubierto el concepto \emph{kind} que nos permite conocer
+    el tipo de un constructor de tipos.
+  \end{block}
+
+  \begin{block}{}
+    Hemos trabajado con implícitos, permitiendo al compilador el que
+    pueda tomar ciertas decisiones por nosotros, para facilitar
+    nuestro trabajo.
+  \end{block}
+
+  \begin{block}{}
+    Hemos visto qué es una \emph{typeclass} y cómo se realiza su
+    implementación en Scala.
+  \end{block}
+
+  \begin{block}{}
+    Sabemos qué forma tiene un \emph{functor}. Desarrollaremos el
+    concepto en más profundidad durante las próximas clases.
+  \end{block}
+\end{frame}
+
+\end{document}
