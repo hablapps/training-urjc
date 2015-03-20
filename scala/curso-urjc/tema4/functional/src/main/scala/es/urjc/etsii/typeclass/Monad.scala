@@ -28,4 +28,12 @@ object Monad {
 
     def flatMap[A, B](lst: Lista[A])(f: A => Lista[B]) = lst.flatMap(f)
   }
+
+  implicit def cualquieraMonad[I] = new Monad[({type f[x] = Cualquiera[I, x]})#f] {
+
+    def unit[D](d: D) = Derecha[I, D](d)
+
+    def flatMap[D, E](cualq: Cualquiera[I, D])(f: D => Cualquiera[I, E]) =
+      cualq.flatMap(f)
+  }
 }
