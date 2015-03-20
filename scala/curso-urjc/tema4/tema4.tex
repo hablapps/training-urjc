@@ -277,10 +277,62 @@ trait Monad[M[_]] {
   \end{lstlisting}
 \end{frame}
 
-\section{La mónada Option: gestión de errores}
+\section{La mónada Opcion: gestión de errores}
 
-\section{La mónada Either: gestión de errores con información}
+\begin{frame}[fragile]
+  \frametitle{La mónada Opcion: gestión de errores}
 
-\section{La mónada List: lidiando con el no-determinismo}
+  \begin{block}{Caso Práctico 1}
+    Se pretende ofrecer el problema de la gestión de errores como
+    motivación hacia la mónada \emph{Option}. La gestión de errores en
+    la programación funcional genera mucho boilerplate y código
+    verdaderamente tedioso. Con las abstracciones oportunas, se
+    consigue un código mucho más legible y conciso.
+  \end{block}
+\end{frame}
+
+\section{La mónada Writer: imprimiendo trazas en la consola}
+
+\begin{frame}[fragile]
+  \frametitle{La mónada Writer: imprimiendo trazas en la consola}
+
+  \begin{block}{Caso Práctico 2}
+    Como ya vimos anteriormente, pintar en la consola mediante
+    \emph{println} es un efecto de lado que rompe la pureza. Por
+    tanto, debe mitigarse o llevarse a las capas más externas de
+    nuestro programa. Lo hacemos devolviendo el String pertinente para
+    pintarlo más adelante. Esta práctica genera bastante boilerplate,
+    que se reduce mediante los combinadores adecuados.
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Takeaways}
+
+  \begin{block}{}
+    Hemos descubierto los funtores, estructura que nos permite
+    abstraer el método \emph{map} para instanciar objetos que se
+    pueden mapear.
+  \end{block}
+
+  \begin{block}{}
+    Hemos visto la estructura de una mónada, aunque todavía
+    desconocemos todo su potencial. No obstante, hemos visto cómo nos
+    pueden ayudar para gestionar errores y describir un sistema de
+    Logging.
+  \end{block}
+
+  \begin{block}{}
+    Empezamos a ver pinceladas de separación entre ``descripción'' e
+    ``interpretación'' (ej: \emph{runWriter})
+  \end{block}
+
+  \begin{block}{}
+    El próximo día veremos la mónada Lista, que nos permite introducir
+    no determinismo, y la mónada Estado, que nos enseñará que
+    paradigmas funcional e imperativos no están tan reñidos como
+    podemos pensar.
+  \end{block}
+\end{frame}
 
 \end{document} 
