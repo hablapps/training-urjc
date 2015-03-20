@@ -6,6 +6,16 @@ sealed trait Lista[+A] {
     case Nada => Nada
     case Cons(x, xs) => Cons(f(x), xs.map(f))
   }
+
+  def concat[B >: A](other: Lista[B]): Lista[B] = this match {
+    case Nada => other
+    case Cons(x, xs) => Cons(x, xs.concat(other))
+  }
+
+  def flatMap[B](f: A => Lista[B]): Lista[B] = this match {
+    case Nada => Nada
+    case Cons(x, xs) => f(x).concat(xs.flatMap(f))
+  }
 }
 
 case class Cons[A](cabeza: A, cola: Lista[A]) extends Lista[A]

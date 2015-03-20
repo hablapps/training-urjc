@@ -243,6 +243,40 @@ def map[A, B](f: A => B)(value: F[A]): F[B]
 
 \section{Efectos y Mónadas}
 
+\begin{frame}[fragile]
+  \frametitle{Efectos y Mónadas}
+
+  \begin{block}{Efectos en FP}
+    \emph{``Functional programmers often informally call type
+      contructors like Par , Option , List , Parser , Gen , and so on
+      effects . This useage is distinct from the term side effect ,
+      which implies some violation of referential transparency. These
+      types are called 'effects' because they augment ordinary values
+      with 'extra' capabilities (Par adds the ability to define
+      parallel computation, Option adds the possibility of failure,
+      and so on).''} (Functional Programming in Scala)
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Efectos y Mónadas}
+
+  \begin{block}{¿Qué es una Mónada?}
+    Es una abstracción difícil de entender, ya que a diferencia del
+    concepto ``objeto'', una mónada es algo que no existe en nuestra
+    vida cotidiana. Su misión es la de abstraer ciertos
+    comportamientos (generalmente asociados a efectos) y pensamos que
+    la mejor forma de entender su significado es mediante ejemplos.
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Monad es una nueva typeclass]
+trait Monad[M[_]] {
+  def unit[A](value: A): M[A]
+  def flatMap[A, B](m: M[A])(f: A => M[B]): M[B]
+}
+  \end{lstlisting}
+\end{frame}
+
 \section{La mónada Option: gestión de errores}
 
 \section{La mónada Either: gestión de errores con información}
