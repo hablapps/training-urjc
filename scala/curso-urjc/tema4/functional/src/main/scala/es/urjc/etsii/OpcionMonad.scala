@@ -1,6 +1,7 @@
 package es.urjc.etsii
 
 import es.urjc.etsii.adt._
+import Opcion.MapExtend
 
 object OpcionMonad extends App {
 
@@ -16,12 +17,6 @@ object OpcionMonad extends App {
     "123456789A" -> Student("john", "smith"),
     "987654321B" -> Student("peter", "parker", Algun(etsii)))
 
-  implicit class MapHelper[A, B](map: Map[A, B]) {
-    def getOpcion(key: A): Opcion[B] = map.get(key) match {
-      case None => Ninguno
-      case Some(b) => Algun(b) 
-    }
-  }
 
   // 1st version
 
