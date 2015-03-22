@@ -1,0 +1,338 @@
+\documentclass[pdftex,hyperref]{beamer}
+
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{amssymb}
+\usepackage{colortbl}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{bibentry}
+\usepackage{listings}
+\usepackage{tabularx}
+
+\definecolor{linkblue}{RGB}{49,57,174}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstdefinelanguage{scala}{
+  morekeywords={abstract,annotation,case,catch,class,def,%
+    do,else,extends,false,final,finally,%
+    for,if,implicit,import,match,mixin,%
+    new,null,object,override,package,%
+    private,protected,requires,return,sealed,%
+    super,this,throw,trait,true,try,%
+    type,val,var,while,with,yield,
+    macro},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[n]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]"""
+}
+\lstset{frame=tb,
+  language=scala,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true
+  tabsize=3
+}
+
+% Configuracion del documento PDF.
+\hypersetup{
+  pdfcreator=Jesús López González,
+  backref%,
+  %%pdfpagemode=FullScreen
+}
+
+% Configuracion pagina principal
+
+\title{\textbf{Programación Funcional en Scala}}
+\subtitle{\textbf{ -- Tema 4 (Parte I) -- \\ Funtores y Mónadas }}
+\author[Jesús López González]{Jesús López González\\jesus.lopez@hablapps.com}
+\institute[@jeslg]{Programación Funcional en Scala\\ Habla Computing}
+\date{Cursos ETSII-URJC 2015}
+
+% Eleccion estilo de la presentacion
+
+\mode<presentation>
+{
+ \usetheme{Madrid}
+ \setbeamercovered{transparent}
+}
+
+\def\newblock{\hskip .11em plus .33em minus .07em}
+
+% Configuracion del logo de la imagen
+
+\subject{Talks}
+
+\pgfdeclareimage[height=0.5cm]{university-logo}{images/logoURJC}
+\logo{\pgfuseimage{university-logo}}
+
+\setcounter{tocdepth}{1}
+
+%NOANIMACION
+\beamerdefaultoverlayspecification{}
+
+% Volver a recordar tabla de contenidos en subsecciones
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>{Índice}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\nobibliography* 
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Warming Up}
+
+  \begin{lstlisting}[language=scala, caption=Warming Up con typeclass YesNo]
+trait YesNo[A] {
+  def yesNo(value: A): Boolean
+}
+  \end{lstlisting}
+\end{frame}
+
+\section{Funtores}
+
+\begin{frame}[fragile]
+  \frametitle{Funtores}
+
+  \begin{block}{Motivación (1/2)}
+    En clases anteriores, ya habíamos dado nuestra propia
+    implementación del método \emph{map} para los tipos \emph{Opcion}
+    y \emph{Lista}.
+  \end{block}
+
+  %% Explicar la variación y rehacerla de cero
+
+  \begin{lstlisting}[language=scala, caption=Implementación de map
+      para 'Opcion' y 'Lista']
+def map[B](f: A => B): Opcion[B] = this match {
+  case Ninguno => Ninguno
+  case Algun(a) => Algun(f(a))
+}
+
+def map[B](f: A => B): Lista[B] = this match {
+  case Nada => Nada
+  case Cons(x, xs) => Cons(f(x), xs.map(f))
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funtores}
+
+  \begin{block}{Motivación (2/2)}
+    Existen ciertos métodos que pueden implementarse en términos de
+    map, por ejemplo \emph{distributeLista} y
+    \emph{distributeOpcion}. Basándote en la signatura de tales
+    funciones, ¿cuál crees que es su misión?
+  \end{block}
+
+  %% Explicar la variación y rehacerla de cero
+
+  \begin{lstlisting}[language=scala, caption=Ejercicio: Implementa
+      distributeList y distributeOption]
+def distributeLista[A, B](lst: Lista[(A, B)]): (Lista[A], Lista[B]) =
+???
+
+def distributeOpcion[A, B](opc: Opcion[(A, B)]): (Opcion[A], Opcion[B])
+= ???
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funtores}
+
+  \begin{block}{¿Qué es un funtor?}
+    Un funtor no es más que la abstracción que nos permite generalizar
+    la función map. De forma muy informal, podemos entender que un
+    funtor recoge el comportamiento de ``cosas'' que se pueden
+    mapear. La typeclass \emph{Functor} recibe un constructor de tipos
+    \emph{F[\_]} como parámetro tipo (cuyo kind es \emph{* -> *}) Por
+    tanto, podríamos instanciar dicha typeclass para tipos tales como
+    \emph{Opcion}, \emph{Lista}, \emph{Tuple1}\ldots
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=La typeclass Functor]
+trait Functor[F[_]] {
+  def map[A, B](value: F[A])(f: A => B): F[B]
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funtores}
+
+  \begin{block}{Funciones que trabajan con funtores}
+    Existe un gran rango de funciones que trabajan sobre funtores, por
+    ejemplo \emph{distribute}. Cualquier tipo que se una a la
+    typeclass \emph{Functor} tendrá acceso a ellas.
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Implementa las siguientes
+    funciones genéricas]
+def distribute[F[_]: Functor, A, B](fab: F[(A, B)]): (F[A], F[B])
+
+def replace[F[_]: Functor, A, B](fa: F[A], b: B): F[B]
+
+def strengthR[F[_]: Functor, A, B](fa: F[A], b: B): F[(A, B)]
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funtores}
+
+  \begin{block}{Leyes de los Funtores}
+    Unirse a un funtor no consiste exclusivamente en dar una
+    implementación a la typeclass. Existen ciertas leyes que deben
+    cumplirse para asegurar la propiedad \emph{structure-preserving}
+    del funtor. Es responsibilidad del programador el asegurar que se
+    cumplen. De no hacerse, podrían obtenerse resultados inesperados
+    al ejecutar funciones genéricas.
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Funtores}
+
+  \begin{block}{Una segunda intuición: levantando funciones}
+    Hasta ahora hemos estado tratando a los funtores como ``cosas''
+    que se pueden mapear. Existe otro punto de vista, más acorde con
+    el punto de vista de la teoría de las categorías. Para obtener
+    dicha intuición, resulta conveniente invertir el orden de las
+    listas de parámetros:
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Ejercicio: ¿Qué intuición
+      ofrece cada signatura?]
+// def map[A, B](value: F[A])(f: A => B): F[B]
+def map[A, B](f: A => B): F[A] => F[B]
+  \end{lstlisting}
+\end{frame}
+
+%% Segunda intuición: 
+
+\section{Efectos y Mónadas}
+
+\begin{frame}[fragile]
+  \frametitle{Efectos y Mónadas}
+
+  \begin{block}{Efectos en FP}
+    \emph{``Functional programmers often informally call type
+      contructors like Par , Option , List , Parser , Gen , and so on
+      effects . This useage is distinct from the term side effect ,
+      which implies some violation of referential transparency. These
+      types are called 'effects' because they augment ordinary values
+      with 'extra' capabilities (Par adds the ability to define
+      parallel computation, Option adds the possibility of failure,
+      and so on).''} (Functional Programming in Scala)
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Efectos y Mónadas}
+
+  \begin{block}{¿Qué es una Mónada?}
+    Es una abstracción difícil de entender, ya que a diferencia del
+    concepto ``objeto'', una mónada es algo que no existe en nuestra
+    vida cotidiana. Su misión es la de abstraer ciertos
+    comportamientos (generalmente asociados a efectos) y pensamos que
+    la mejor forma de entender su significado es mediante ejemplos.
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Monad es una nueva typeclass]
+trait Monad[M[_]] {
+  def unit[A](value: A): M[A]
+  def flatMap[A, B](m: M[A])(f: A => M[B]): M[B]
+}
+  \end{lstlisting}
+\end{frame}
+
+\section{La mónada Opcion: gestión de errores}
+
+\begin{frame}[fragile]
+  \frametitle{La mónada Opcion: gestión de errores}
+
+  \begin{block}{Caso Práctico 1}
+    Se pretende ofrecer el problema de la gestión de errores como
+    motivación hacia la mónada \emph{Option}. La gestión de errores en
+    la programación funcional genera mucho boilerplate y código
+    verdaderamente tedioso. Con las abstracciones oportunas, se
+    consigue un código mucho más legible y conciso.
+  \end{block}
+\end{frame}
+
+\section{La mónada Writer: imprimiendo trazas en la consola}
+
+\begin{frame}[fragile]
+  \frametitle{La mónada Writer: imprimiendo trazas en la consola}
+
+  \begin{block}{Caso Práctico 2}
+    Como ya vimos anteriormente, pintar en la consola mediante
+    \emph{println} es un efecto de lado que rompe la pureza. Por
+    tanto, debe mitigarse o llevarse a las capas más externas de
+    nuestro programa. Lo hacemos devolviendo el String pertinente para
+    pintarlo más adelante. Esta práctica genera bastante boilerplate,
+    que se reduce mediante los combinadores adecuados.
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Takeaways}
+
+  \begin{block}{}
+    Hemos descubierto los funtores, estructura que nos permite
+    abstraer el método \emph{map} para instanciar objetos que se
+    pueden mapear.
+  \end{block}
+
+  \begin{block}{}
+    Hemos visto la estructura de una mónada, aunque todavía
+    desconocemos todo su potencial. No obstante, hemos visto cómo nos
+    pueden ayudar para gestionar errores y describir un sistema de
+    Logging.
+  \end{block}
+
+  \begin{block}{}
+    Empezamos a ver pinceladas de separación entre ``descripción'' e
+    ``interpretación'' (ej: \emph{runWriter})
+  \end{block}
+
+  \begin{block}{}
+    El próximo día veremos la mónada Lista, que nos permite introducir
+    no determinismo, y la mónada Estado, que nos enseñará que
+    paradigmas funcional e imperativos no están tan reñidos como
+    podemos pensar.
+  \end{block}
+\end{frame}
+
+\end{document} 
