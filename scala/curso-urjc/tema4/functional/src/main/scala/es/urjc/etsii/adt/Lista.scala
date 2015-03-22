@@ -12,10 +12,17 @@ sealed trait Lista[+A] {
     case Cons(x, xs) => Cons(x, xs.concat(other))
   }
 
+  def ++[B >: A](other: Lista[B]): Lista[B] = concat(other)
+
   def flatMap[B](f: A => Lista[B]): Lista[B] = this match {
     case Nada => Nada
     case Cons(x, xs) => f(x).concat(xs.flatMap(f))
   }
+
+  def foldLeft[B](z: B)(f: (B, A) => B): B = this match {
+    case Nada => z
+    case Cons(x, xs) => xs.foldLeft(f(z, x))(f)
+  } 
 }
 
 case class Cons[A](cabeza: A, cola: Lista[A]) extends Lista[A]
