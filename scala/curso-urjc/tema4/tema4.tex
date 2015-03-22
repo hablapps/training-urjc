@@ -235,7 +235,7 @@ def strengthR[F[_]: Functor, A, B](fa: F[A], b: B): F[(A, B)]
   \begin{lstlisting}[language=scala, caption=Ejercicio: ¿Qué intuición
       ofrece cada signatura?]
 // def map[A, B](value: F[A])(f: A => B): F[B]
-def map[A, B](f: A => B)(value: F[A]): F[B]
+def map[A, B](f: A => B): F[A] => F[B]
   \end{lstlisting}
 \end{frame}
 
