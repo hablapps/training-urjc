@@ -15,33 +15,40 @@ object Impure {
   def join(request: JoinRequest): JoinResponse = {
     val JoinRequest(_, uid, gid) = request
     DB.withSession { implicit session =>
-      val must_approve = (for { 
+      val group: Option[Group] = (for { 
         group <- group_table if group.gid === gid
-      } yield group.must_approve).firstOption
+      } yield group).firstOption
      
-      val exists_user = (for {
+      val user: Option[User] = (for {
         user <- user_table if user.uid === uid
       } yield user).firstOption
       
-      if (!must_approve.isDefined) 
+      if (!group.isDefined) 
         throw new RuntimeException(s"Group $gid not found")
-      else if (!exists_user.isDefined)
+      else if (!user.isDefined)
         throw new RuntimeException(s"User $uid not found")
-      else 
-        must_approve match {
-          case Some(true) => 
-            val maybeId = join_table returning join_table.map(_.jid) += request
-            Left(request.copy(jid = maybeId))
-          case _ => 
-            val mid = member_table returning member_table.map(_.mid) += Member(None, uid, gid)
-            Right(Member(mid, uid, gid))
-        }
+      else if (group.get.must_approve) {
+        val maybeId = join_table returning join_table.map(_.jid) += request
+        Left(request.copy(jid = maybeId))
+      } else {
+        val mid = member_table returning member_table.map(_.mid) += Member(None, uid, gid)
+        Right(Member(mid, uid, gid))
+      }
     }
   }
 
   // VERSION 2: SEPARATION OF CONCERNS
 
-  object Store{
+  trait Store{
+    def getGroup(gid: Int): Group
+    def getUser(uid: Int): User
+    def putJoin(join: JoinRequest): JoinRequest
+    def putMember(member: Member): Member
+    def isMember(uid: Int, gid: Int): Boolean
+    def isPending(uid: Int, gid: Int): Boolean
+  }
+
+  object MySQLStore extends Store{
 
     def getGroup(gid: Int): Group = 
       DB.withSession { implicit session =>
@@ -80,8 +87,10 @@ object Impure {
       DB.withSession { implicit session =>
         true
       }
+  }
 
 
+  trait Services{ self: Store => 
     // EL CUADRO PARA REGALAR ... PERO QUE SE ROMPERÁ CON QUE LO TOQUES, O LO CAMBIES DE SITIO
     
     def join(request: JoinRequest): JoinResponse = {
