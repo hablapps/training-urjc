@@ -1,4 +1,4 @@
-name := "functional"
+name := "fp"
 
 version := "1.0"
 

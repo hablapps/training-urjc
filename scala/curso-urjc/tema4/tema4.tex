@@ -66,7 +66,7 @@
 % Configuracion pagina principal
 
 \title{\textbf{Programación Funcional en Scala}}
-\subtitle{\textbf{ -- Tema 4 (Parte I) -- \\ Funtores y Mónadas }}
+\subtitle{\textbf{ -- Tema 4 -- \\ Funtores y Mónadas }}
 \author[Jesús López González]{Jesús López González\\jesus.lopez@hablapps.com}
 \institute[@jeslg]{Programación Funcional en Scala\\ Habla Computing}
 \date{Cursos ETSII-URJC 2015}
@@ -279,7 +279,7 @@ trait Monad[M[_]] {
 
 \section{La mónada Opcion: gestión de errores}
 
-\begin{frame}[fragile]
+\begin{frame}
   \frametitle{La mónada Opcion: gestión de errores}
 
   \begin{block}{Caso Práctico 1}
@@ -293,7 +293,7 @@ trait Monad[M[_]] {
 
 \section{La mónada Writer: imprimiendo trazas en la consola}
 
-\begin{frame}[fragile]
+\begin{frame}
   \frametitle{La mónada Writer: imprimiendo trazas en la consola}
 
   \begin{block}{Caso Práctico 2}
@@ -306,6 +306,89 @@ trait Monad[M[_]] {
   \end{block}
 \end{frame}
 
+\section{La mónada Lista: lidiando con el no-determinismo}
+
+\begin{frame}
+  \frametitle{La mónada Lista: lidiando con el no-determinismo}
+
+  \begin{block}{Caso Práctico 3}
+    Existen ciertas funciones que son no deterministas. Un ejemplo de
+    este tipo de función podría ser \emph{sqrt} (raíz cuadrada). ¿Qué
+    debería devolver el siguiente programa? \emph{add(2, sqrt(9))} La
+    respuesta más directa podría ser 5. No obstante, no debemos
+    olvidar que \emph{sqrt(9)} devuelve en realidad \emph{(+3,
+      -3)}. Por tanto, el resultado del programa debería ser \emph{(+5,
+        -1)} La mónada Lista nos permite lidiar con funciones no
+    deterministas de una manera muy elegante.
+  \end{block}
+\end{frame}
+
+\section{Mónada como abstracción común}
+
+\begin{frame}[fragile]
+  \frametitle{Una mónada para gobernarlos a todos}
+
+  \begin{block}{Mónada como abstracción común}
+    Una mónada es la abstracción que generaliza las funciones
+    \emph{unit} y \emph{flatMap}. Nos permite representar
+    computaciones definidas como secuencias de pasos. Se aplican en
+    contextos muy diversos, por lo que es muy recomendable analizar
+    las diversas instancias existentes para adquirir una mejor
+    intuición (\emph{State}, \emph{Reader}, \emph{Free}\ldots)
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Ejercicio: Implementa
+      estas funciones]
+trait Monad[M[_]] {
+  def unit[A](value: A): M[A]
+  def flatMap[A, B](m: M[A])(f: A => M[B]): M[B]
+}
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Una mónada para gobernarlos a todos}
+
+  \begin{block}{Funciones monádicas}
+    Al igual que ocurría con \emph{Functor}, existen una serie de
+    funciones que podemos implementar una única vez y estarán
+    disponibles para cualquier tipo de dato que se una a la typeclass
+    \emph{Monad}.
+  \end{block}
+
+  \begin{lstlisting}[language=scala, caption=Ejercicio: Implementa
+      estas funciones genéricas]
+trait Monad[M[_]] {
+  def map2[A, B, C](m: M[A], mb: M[B])(f: (A, B) => C): M[C] = ???
+  def sequence[A](lma: List[M[A]]): M[List[A]] = ???
+  def product[A, B](ma: M[A], mb: M[B]): M[(A, B)] = ???
+}
+  \end{lstlisting}
+\end{frame}
+
+\section{Scala, ¿con pilas incluidas?}
+
+\begin{frame}[fragile]
+  \frametitle{Scala, ¿con pilas incluidas?}
+
+  \begin{block}{¿Qué ofrece y qué no ofrece Scala de forma nativa?}
+    \begin{itemize}
+    \item Scala no despliega \emph{typeclasses}, aunque como ya hemos
+      visto, nos permite simularlas.
+    \item Scala no da entidad al concepto \emph{Functor}, ni al
+      concepto \emph{Monad}, pero nos ofrece una implementación para
+      funciones tales como \emph{map} o \emph{flatMap}.
+    \item Scala nos dulcifica la sintaxis de una mónada mediante una
+      for-comprehension, aplicable a nuestros propios tipos.
+    \item Existen librerías como \emph{scalaz} que dan entidad a
+      abstracciones funcionales y facilitan el trabajo en este
+      lenguaje con el paradigma funcional.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\section{Takeaways}
+
 \begin{frame}
   \frametitle{Takeaways}
 
@@ -316,10 +399,8 @@ trait Monad[M[_]] {
   \end{block}
 
   \begin{block}{}
-    Hemos visto la estructura de una mónada, aunque todavía
-    desconocemos todo su potencial. No obstante, hemos visto cómo nos
-    pueden ayudar para gestionar errores y describir un sistema de
-    Logging.
+    Hemos visto la estructura de una mónada y varios ejemplos, con
+    objetivos muy dispares entre sí.
   \end{block}
 
   \begin{block}{}
@@ -328,10 +409,9 @@ trait Monad[M[_]] {
   \end{block}
 
   \begin{block}{}
-    El próximo día veremos la mónada Lista, que nos permite introducir
-    no determinismo, y la mónada Estado, que nos enseñará que
-    paradigmas funcional e imperativos no están tan reñidos como
-    podemos pensar.
+    El próximo día veremos cómo implementar nuestros propios
+    ``efectos'', haciendo fuerte empeño en separar los aspectos de
+    descripción e interpretación.
   \end{block}
 \end{frame}
 
