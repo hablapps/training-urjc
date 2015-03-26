@@ -20,5 +20,6 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-nop" % "1.6.4",
   // "com.h2database" % "h2" % "1.3.170",
   "mysql" % "mysql-connector-java" % "5.1.26",
-  "org.scala-lang" % "scala-compiler" % scalaVersion.value
+  "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+  "org.scalaz" %% "scalaz-core" % "7.1.1"
 )
