@@ -19,7 +19,7 @@ object ImpureOO {
     def isPending(uid: Int, gid: Int): Boolean
   }
 
-  object MySQLStore extends Store{
+  trait MySQLStore extends Store{
 
     def getGroup(gid: Int): Group = 
       DB.withSession { implicit session =>
@@ -75,6 +75,8 @@ object ImpureOO {
     }
 
   }
+
+  object StoreOO extends Services with MySQLStore
 
 }
  

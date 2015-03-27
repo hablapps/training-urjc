@@ -93,5 +93,7 @@ object SemiImpure {
 
   }
 
+  object StoreExceptions extends Services with MySQLStore
+
 }
  
