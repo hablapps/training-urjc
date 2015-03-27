@@ -19,16 +19,14 @@ object SemiImpure {
     def isPending(uid: Int, gid: Int): Boolean
   }
 
-  object MySQLStore extends Store{
+  trait MySQLStore extends Store{
 
     def getGroup(gid: Int): Either[StoreError, Group] = 
       DB.withSession { implicit session =>
         val maybeGroup = (for { 
           group <- group_table if group.gid === gid
         } yield group).firstOption
-        maybeGroup.fold[Either[StoreError,Group]](
-          Left(NonExistentEntity(gid)))(
-          Right(_))
+        maybeGroup.toRight(NonExistentEntity(gid))
       }
      
     def getUser(uid: Int): Either[StoreError, User] =  
@@ -36,17 +34,15 @@ object SemiImpure {
         val maybeUser = (for {
           user <- user_table if user.uid === uid
         } yield user).firstOption
-        maybeUser.fold[Either[StoreError,User]](
-          Left(NonExistentEntity(uid)))(
-          Right(_))
+        maybeUser.toRight(NonExistentEntity(uid))
       }
       
     def putJoin(join: JoinRequest): Either[StoreError, JoinRequest] = 
       DB.withSession { implicit session =>
         val maybeId = join_table returning join_table.map(_.jid) += join
-        maybeId.fold[Either[StoreError, JoinRequest]](
-          Left(GenericError(s"Error al insertar JoinRequest $join")))(
-          _ => Right(join.copy(jid = maybeId)))
+        maybeId.toRight(GenericError(s"Error al insertar JoinRequest $join"))
+          .right
+          .map(jid => join.copy(jid = Some(jid)))
       }
   
     def putMember(member: Member): Either[StoreError, Member] = 
@@ -81,6 +77,18 @@ object SemiImpure {
           else
             (putMember(Member(None, uid, gid)).right map Right.apply).right
       } yield result
+    }
+
+    def joinWithFlatmap(request: JoinRequest): Either[StoreError, JoinResponse] = {
+      val JoinRequest(_, uid, gid) = request  
+      getUser(uid).right flatMap { user => 
+        getGroup(gid).right flatMap { group =>
+          if (group.must_approve) 
+            putJoin(request).right map Left.apply
+          else
+            putMember(Member(None, uid, gid)).right map Right.apply
+        }
+      }
     }
 
   }

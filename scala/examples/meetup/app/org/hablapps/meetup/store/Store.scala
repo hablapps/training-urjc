@@ -24,7 +24,7 @@ case class GenericError(override val msg: String) extends StoreError(msg)
   
 object Store{
   
-  def either[U,V](cond: => Boolean)(_then: Store[V], _else: Store[U]): Store[Either[U,V]] = 
+  def If[U,V](cond: => Boolean)(_then: Store[V], _else: Store[U]): Store[Either[U,V]] = 
     if (cond) 
       _then map (u => Right(u))
     else
