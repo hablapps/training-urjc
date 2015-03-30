@@ -1,0 +1,197 @@
+\documentclass[pdftex,hyperref]{beamer}
+
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{amssymb}
+\usepackage{colortbl}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{bibentry}
+\usepackage{listings}
+\usepackage{tabularx}
+
+\definecolor{linkblue}{RGB}{49,57,174}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstdefinelanguage{scala}{
+  morekeywords={abstract,annotation,case,catch,class,def,%
+    do,else,extends,false,final,finally,%
+    for,if,implicit,import,match,mixin,%
+    new,null,object,override,package,%
+    private,protected,requires,return,sealed,%
+    super,this,throw,trait,true,try,%
+    type,val,var,while,with,yield,
+    macro},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[n]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]"""
+}
+\lstset{frame=tb,
+  language=scala,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true
+  tabsize=3
+}
+
+% Configuracion del documento PDF.
+\hypersetup{
+  pdfcreator=Jesús López González,
+  backref%,
+  %%pdfpagemode=FullScreen
+}
+
+% Configuracion pagina principal
+
+\title{\textbf{Programación Funcional en Scala}}
+\subtitle{\textbf{ -- Tema 6 -- \\ Introducción a Play }}
+\author[Jesús López González]{Jesús López González\\jesus.lopez@hablapps.com}
+\institute[@jeslg]{Programación Funcional en Scala\\ Habla Computing}
+\date{Cursos ETSII-URJC 2015}
+
+% Eleccion estilo de la presentacion
+
+\mode<presentation>
+{
+ \usetheme{Madrid}
+ \setbeamercovered{transparent}
+}
+
+\def\newblock{\hskip .11em plus .33em minus .07em}
+
+% Configuracion del logo de la imagen
+
+\subject{Talks}
+
+\pgfdeclareimage[height=0.5cm]{university-logo}{images/logoURJC}
+\logo{\pgfuseimage{university-logo}}
+
+\setcounter{tocdepth}{1}
+
+%NOANIMACION
+\beamerdefaultoverlayspecification{}
+
+% Volver a recordar tabla de contenidos en subsecciones
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>{Índice}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\nobibliography* 
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\section{Primeros Pasos con Play}
+
+\begin{frame}
+  \frametitle{Primeros Pasos con Play}
+
+  \begin{block}{¿Por qué veremos Play en este curso?}
+    \begin{itemize}
+    \item Principal estandarte de Typesafe
+    \item Paradigma Funcional llevado a un caso ``muy'' real
+    \item El dominio del desarrollo web es ampliamente conocido
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Primeros Pasos con Play}
+
+  \begin{block}{¿Qué es Play?}
+    \emph{Play!} es un framework web desarrollado por Guillaume Bort
+    en el año 2007. Algunas de sus principales características son:
+
+    \begin{itemize}
+    \item Versiones Java y \textbf{Scala}
+    \item \emph{Stateless}, en el sentido en que no se guarda
+      información asociada a una sesión entre diferentes invocaciones
+      de un mismo cliente.
+    \item Asíncrono, extremadamente asíncrono. Se usa el tipo de datos
+      \emph{Future} como elemento céntrico para lograr tal feature.
+    \item MVC, haremos especial énfasis en el modelo y el controlador.
+    \item {HTTP Awareness, no se oculta la naturaleza ``web'' del
+      framework}
+    \item \textbf{Framework Impuro} en cuanto al paradigma funcional.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Primeros Pasos con Play}
+
+  \begin{block}{Instalación del framework (requiere JDK instalado)}
+
+    \begin{enumerate}
+    \item Descargamos \emph{activator} desde el siguiente enlace
+      \href{https://typesafe.com/get-started}{https://typesafe.com/get-started}
+    \item Ejecutamos el comando \emph{activator new} para crear un
+      nuevo proyecto a partir de las plantillas disponibles.
+    \item Eligiremos la template \emph{play-scala} entre las opciones
+      disponibles.
+    \item Para nuestro primer proyecto, utilizaremos el nombre por
+      defecto \emph{play-scala}.
+    \item Observaremos que se ha creado un directorio
+      \emph{play-scala} donde queda recogida la estructura de un
+      proyecto Play.
+    \item Mediante la orden \emph{activator run} (tras haber hecho un
+      \emph{cd} al nuevo directorio creado) arrancaremos la
+      aplicación.
+    \item Accediendo a
+      \href{http://localhost:9000}{http://localhost:9000} desde
+      nuestro navegador, deberíamos ver la página de bienvenida.
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+
+\section{Estructura de un proyecto Play}
+
+\begin{frame}
+  \frametitle{Estructura de un proyecto Play}
+
+  \begin{block}{Navegando por un proyecto Play}
+    Aunque no es difícil darse cuenta de que estamos ante un proyecto
+    \emph{sbt}, existen ciertos directorios que son particulares a
+    Play. Se pretende navegar por la jerarquía de ficheros para
+    identificar los elementos que componen una aplicación desarrollada
+    bajo este framework web:
+    \begin{itemize}
+    \item[conf] Aspectos de configuración del framework (routing, logging\ldots)
+    \item[app] Fuentes asociados a nuestra aplicación (modelos,
+      vistas, controladores\ldots)
+    \item[test] Fuentes asociados a las pruebas de nuestra aplicación
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\end{document} 
