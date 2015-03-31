@@ -12,3 +12,5 @@ libraryDependencies ++= Seq(
   cache,
   ws
 )
+
+libraryDependencies += "org.scalatestplus" %% "play" % "1.1.0" % "test"

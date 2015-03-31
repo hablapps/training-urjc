@@ -27,4 +27,3 @@ trait PermissionServices { this: UserServices with WordServices =>
       then_K = setEntry,
       else_K = _ => Return(None))
 }
-
