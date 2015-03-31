@@ -85,10 +85,13 @@ trait CacheRepoInterpreter extends RepoInterpreter {
         interpreter(next, state)
       }
       case GetUser(nick, next) => {
+        println(s"GETTING USER ${USER_NAMESPACE}.$nick")
         val user = state.getAs[User](s"${USER_NAMESPACE}.$nick")
+        println(user)
         interpreter(next(user), state)
       }
       case SetUser(user, next) => {
+        println(s"SETTING USER ${USER_NAMESPACE}.${user.nick}")
         state.set(s"${USER_NAMESPACE}.${user.nick}", user)
         interpreter(next, state)
       }

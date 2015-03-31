@@ -1,4 +1,4 @@
-package es.scalamad.dictionary.test
+package es.urjc.etsii.dictionary.test
 
 import scala.language.postfixOps
 

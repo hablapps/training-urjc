@@ -16,6 +16,7 @@ import Repo._
 object DictionaryController extends DictionaryController 
   with CacheRepoInterpreter {
 
+  // Initial Data Load
   interpreter(
     for {
       _ <- setUser(User("Mr", "Proper", Option(ReadWrite)))
@@ -36,7 +37,7 @@ trait DictionaryController extends Controller
   // GET /
 
   def helloDictionary: Action[AnyContent] = Action {
-    Ok("Welcome to the ScalaMAD Dictionary!")
+    Ok("Welcome to the ETSII Dictionary!")
   }
 
   // GET /:word
