@@ -22,7 +22,6 @@ object FactorialBoot extends App {
 
   println(s"The result is: ${result.n}") //120
 
-  factorialActor ! PoisonPill
   system.shutdown()
 
 }

@@ -11,20 +11,18 @@ class FactorialActor extends Actor {
   import context.dispatcher
   implicit val timeout = Timeout(5 seconds)
 
-  val child: ActorRef = context.actorOf(Props[FactorialActor])
+  var child: Option[ActorRef] = None
 
   def receive = {
 
     case Calculate(n: Int) if n < 2 =>
       sender ! Result(1)
-      child ! PoisonPill
 
     case Calculate(n: Int) =>
-      (child ? Calculate(n-1)).mapTo[Result].map {
-        case Result(result) => Result(n * result)
-      }.pipeTo(sender)
-
-      child ! PoisonPill
+      (child.getOrElse(context.actorOf(Props[FactorialActor])) ? Calculate(n-1))
+        .mapTo[Result]
+        .map( childResult => Result(n * childResult.n))
+        .pipeTo(sender)
   }
 }
 

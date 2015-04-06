@@ -4,14 +4,14 @@ import akka.actor.Actor
 
 class AdderActor extends Actor {
 
-  var acum = 0
+  var accum = 0
 
   def receive = {
-    case Add(n: Int) => acum = acum + n
-    case PrintAcum => println(s"Acum: $acum")
+    case Add(n: Int) => accum = accum + n
+    case PrintAccum => println(s"Accum: $accum")
   }
 
 }
 
 case class Add(n: Int)
-case object PrintAcum
+case object PrintAccum
