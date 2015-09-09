@@ -11,8 +11,8 @@ trait Resultado {
   def esValido: Boolean
 
   def &&(r: Resultado): Resultado = (this, r) match {
-    case (Valido, _) => r
-    case (_, Valido) => r
+    case (Valido, r2) => r2
+    case (r2, Valido) => r2
     case (Invalido(err1), Invalido(err2)) => Invalido(err1 append err2)
   }
 }
@@ -25,6 +25,13 @@ object Resultado {
 
     def append(r1: Resultado, r2: => Resultado) = r1 && r2
   }
+
+  def toEstadoDeclaracion(es: List[Resultado]): EstadoDeclaracion =
+    es.filter(_.esValido).size match {
+      case n if n == es.size => AceptacionTotal
+      case 0 => RechazoTotal
+      case _ => AceptacionParcial
+    }
 }
 
 case object Valido extends Resultado {
@@ -75,10 +82,10 @@ case class SiBuilder[A](
 
 object SiBuilder {
   implicit def toValidacion[A](builder: SiBuilder[A]) = Validacion[A] { a =>
-    if (builder.condicion.get(a) && builder.entonces.get(a))
-      Valido
-    else
-      Invalido(NonEmptyList(builder.enCasoContrario.get))
+    (builder.condicion.get(a), builder.entonces.get(a)) match {
+      case (false, _) | (true, true) => Valido
+      case (true, false) => Invalido(NonEmptyList(builder.enCasoContrario.get))
+    }
   }
 }
 
