@@ -15,7 +15,7 @@ object CRGOPE {
   case class Actualizar[A](ra: Ref[A], a: A) extends CRGOPE[Unit]
   case class Validar[R <: Registro](
     rr: Ref[R], v: Validacion[R]) extends CRGOPE[Resultado]
-  case class Enviar[R <: Registro](rr: Ref[R]) extends CRGOPE[Unit]
+  case class Enviar[R <: Registro](rs: List[Ref[R]]) extends CRGOPE[Unit]
 
   type ProgramaCRGOPE[A] = Free[CRGOPE, A]
 
@@ -36,8 +36,8 @@ object CRGOPE {
       rr: Ref[R])(implicit v: Validacion[R]): ProgramaCRGOPE[Resultado] =
     Free.liftF[CRGOPE, Resultado](Validar(rr, v))
 
-  def enviar[R <: Registro](rr: Ref[R]): ProgramaCRGOPE[Unit] =
-    Free.liftF[CRGOPE, Unit](Enviar(rr))
+  def enviar[R <: Registro](rs: List[Ref[R]]): ProgramaCRGOPE[Unit] =
+    Free.liftF[CRGOPE, Unit](Enviar(rs))
 
   // Combinadores
 
@@ -47,16 +47,16 @@ object CRGOPE {
   def paraTodas[A, B](xs: List[A])(f: A => ProgramaCRGOPE[B]): ProgramaCRGOPE[List[B]] =
     paraTodos[A, B](xs)(f)
 
+  def modificar[A](ea: Ref[A])(f: A => A): ProgramaCRGOPE[Unit] = for {
+    a <- evaluar(ea)
+    _ <- actualizar(ea)(f(a))
+  } yield ()
+
   def altaBorrador[R <: Registro { type This = R }](
       r: R): ProgramaCRGOPE[Ref[R]] = for {
     er <- alta(r)
     _  <- actualizarEstado(er, Borrador)
   } yield er
-
-  def modificar[A](ea: Ref[A])(f: A => A): ProgramaCRGOPE[Unit] = for {
-    a <- evaluar(ea)
-    _ <- actualizar(ea)(f(a))
-  } yield ()
 
   def actualizarEstado[R <: Registro { type This = R }](
       rr: Ref[R],

@@ -44,5 +44,5 @@ case class DB020(
   type This = DB020
 
   def setEstado(estado: EstadoRegistro): This = copy(estado=estado)
-  def setErrores(errores: List[Error]): This = copy(errores=errores)
+  def setErrores(errores: List[Error]): This  = copy(errores=errores)
 }

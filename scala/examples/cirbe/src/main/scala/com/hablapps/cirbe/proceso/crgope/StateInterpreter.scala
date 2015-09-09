@@ -26,10 +26,12 @@ object StateInterpreter {
       case Validar(rr, v) => for {
         m <- gets((s: CRGOPEState) => s._2)
       } yield v.run(m(rr).asInstanceOf[Registro])
-      case Enviar(rr) => for {
-        v <- gets((s: CRGOPEState) => s._2(rr))
-        _ = println(s"Enviando registro '$v' a BdE")
-      } yield ()
+      case Enviar(rs) => (implicitly[Monad[StateCRGOPE]].traverse(rs) { r =>
+        for {
+          v <- gets((s: CRGOPEState) => s._2(r))
+          _ = println(s"=> Enviando registro '$v' a BdE")
+        } yield ()
+      }) as (())
     }
   }
 }
