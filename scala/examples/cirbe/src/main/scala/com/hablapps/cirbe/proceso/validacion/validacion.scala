@@ -26,12 +26,12 @@ object Resultado {
     def append(r1: Resultado, r2: => Resultado) = r1 && r2
   }
 
-  def toEstadoDeclaracion(es: List[Resultado]): EstadoDeclaracion =
-    es.filter(_.esValido).size match {
-      case n if n == es.size => AceptacionTotal
-      case 0 => RechazoTotal
-      case _ => AceptacionParcial
-    }
+  // def toEstadoDeclaracion(es: List[Resultado]): EstadoDeclaracion =
+  //   es.filter(_.esValido).size match {
+  //     case n if n == es.size => AceptacionTotal
+  //     case 0 => RechazoTotal
+  //     case _ => AceptacionParcial
+  //   }
 }
 
 case object Valido extends Resultado {
