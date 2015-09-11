@@ -52,7 +52,7 @@ object Validacion {
 
   implicit def validacionMonoid[A] = new Monoid[Validacion[A]] {
 
-    def zero = Validacion[A](_ => Valido)
+    def zero: Validacion[A] = Validacion[A](_ => Valido)
 
     def append(v1: Validacion[A], v2: => Validacion[A]) = v1 && v2
   }
