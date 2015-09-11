@@ -25,20 +25,13 @@ object Resultado {
 
     def append(r1: Resultado, r2: => Resultado) = r1 && r2
   }
-
-  // def toEstadoDeclaracion(es: List[Resultado]): EstadoDeclaracion =
-  //   es.filter(_.esValido).size match {
-  //     case n if n == es.size => AceptacionTotal
-  //     case 0 => RechazoTotal
-  //     case _ => AceptacionParcial
-  //   }
 }
 
 case object Valido extends Resultado {
   def esValido = true
 }
 
-case class Invalido(errores: NonEmptyList[Error]) extends Resultado {
+case class Invalido(errores: NonEmptyList[TError]) extends Resultado {
   def esValido = false
 }
 
@@ -68,7 +61,7 @@ object Validacion {
 case class SiBuilder[A](
     condicion: Option[A => Boolean] = None,
     entonces: Option[A => Boolean]  = None,
-    enCasoContrario: Option[Error]  = None) {
+    enCasoContrario: Option[TError]  = None) {
 
   def Condicion(f: A => Boolean): SiBuilder[A] =
     copy(condicion = Some(f))
@@ -76,7 +69,7 @@ case class SiBuilder[A](
   def Entonces(f: A => Boolean): SiBuilder[A] =
     copy(entonces = Some(f))
 
-  def EnCasoContrario(err: Error): SiBuilder[A] =
+  def EnCasoContrario(err: TError): SiBuilder[A] =
     copy(enCasoContrario = Option(err))
 }
 

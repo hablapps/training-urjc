@@ -1,6 +1,6 @@
 package com.hablapps.cirbe.dominio
 
-trait Registro {
+sealed trait Registro {
   def id: String
   def errores: List[TError]
 }

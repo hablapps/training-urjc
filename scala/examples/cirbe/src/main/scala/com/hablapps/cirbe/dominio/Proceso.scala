@@ -2,5 +2,5 @@ package com.hablapps.cirbe.dominio
 
 case class Proceso(
   cirbe: Cirbe,
-  nombre: String,
+  id: String,
   crgopes: Crgopes)
