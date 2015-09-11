@@ -14,8 +14,8 @@ object Crgopes {
   case class Declarar[R <: Registro](registro: R, crgopes_id: String)
     extends InstruccionCrgopes[String]
 
-  case class Validar[R <: Registro](registro: R, validacion: Validacion[R])
-    extends InstruccionCrgopes[Resultado]
+  case class GetCrgopes(crgopes_id: String)
+    extends InstruccionCrgopes[Option[Crgopes]]
 
   case class Remitir(registros: List[Registro])
     extends InstruccionCrgopes[Unit]
@@ -23,7 +23,8 @@ object Crgopes {
   case class SolicitarConfirmacion(relacion: List[(Registro, Resultado)])
     extends InstruccionCrgopes[Boolean]
 
-  case class GetCrgopes(crgopes_id: String) extends InstruccionCrgopes[Crgopes]
+  case class Validar[R <: Registro](registro: R, validacion: Validacion[R])
+    extends InstruccionCrgopes[Resultado]
 
   type ProgramaCrgopes[A] = Free[InstruccionCrgopes, A]
 
@@ -45,7 +46,7 @@ object Crgopes {
     Free.liftF[InstruccionCrgopes, Boolean](SolicitarConfirmacion(relacion))
 
   def getCrgopes(crgopes_id: String) =
-    Free.liftF[InstruccionCrgopes, Crgopes](GetCrgopes(crgopes_id))
+    Free.liftF[InstruccionCrgopes, Option[Crgopes]](GetCrgopes(crgopes_id))
 
   // Combinadores
 
@@ -58,7 +59,7 @@ object Crgopes {
   def remitirEnvio(crgopes_id: String)(
       implicit v: Validacion[DB010], w: Validacion[DB020]): ProgramaCrgopes[Unit] = {
     for {
-      crgopes  <- getCrgopes(crgopes_id)
+      crgopes  <- getCrgopes(crgopes_id).map(_.get)
       rel010   <- paraTodos(crgopes.db010s)(validar(_)).map(crgopes.db010s.zip(_))
       rel020   <- paraTodos(crgopes.db020s)(validar(_)).map(crgopes.db020s.zip(_))
       relacion =  rel010 ++ rel020
