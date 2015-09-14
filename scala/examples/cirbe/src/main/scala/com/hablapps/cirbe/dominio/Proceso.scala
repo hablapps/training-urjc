@@ -1,6 +1,3 @@
 package com.hablapps.cirbe.dominio
 
-case class Proceso(
-  cirbe: Cirbe,
-  id: String,
-  crgopes: Crgopes)
+case class Proceso(id: String, crgopes: List[Crgopes] = List())

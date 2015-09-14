@@ -9,35 +9,34 @@ object StateInterpreter {
 
   type StateCirbe[A] = State[Cirbe, A]
   val monad = implicitly[Monad[StateCirbe]]
-  import monad._
 
   def toState = new (InstruccionCrgopes ~> StateCirbe) {
     def apply[A](ins: InstruccionCrgopes[A]): StateCirbe[A] = ins match {
-      // case GetCrgopes(id) => for {
-      //   _ <- gets(cirbe => cirbe.procesos.find())
-      // } yield valor
-      case Remitir(_) => { println("Remitiendo a BdE..."); point(()) }
-      case SolicitarConfirmacion(_) => point(true)
-      case Validar(r, v) => point(v.run(r))
-      // case Alta(a) => for {
-      //   c <- gets((s: CrgopesState) => s._1)
-      //   _ <- modify((s: CrgopesState) => (s._1 + 1, s._2 + (s._1 -> a)))
-      // } yield c
-      // case Evaluar(ra) => for {
-      //   m <- gets((s: CrgopesState) => s._2)
-      // } yield m(ra).asInstanceOf[A]
-      // case Actualizar(ra, a) => for {
-      //   _ <- modify((s: CrgopesState) => (s._1, s._2.updated(ra, a)))
-      // } yield ()
-      // case Validar(rr, v) => for {
-      //   m <- gets((s: CrgopesState) => s._2)
-      // } yield v.run(m(rr).asInstanceOf[Registro])
-      // case Enviar(rs) => (implicitly[Monad[StateCrgopes]].traverse(rs) { r =>
-      //   for {
-      //     v <- gets((s: CrgopesState) => s._2(r))
-      //     _ = println(s"=> Enviando registro '$v' a BdE")
-      //   } yield ()
-      // }) as (())
+      case Declarar(registro, crgopes_id) => for {
+        cirbe    <- (get: StateCirbe[Cirbe])
+        proceso  = cirbe.procesos.find(_.crgopes.exists(_.id == crgopes_id)).get
+        crgopes  = cirbe.procesos.flatMap(_.crgopes).find(_.id == crgopes_id).get
+        crgopes2 = registro match {
+          case (r: DB010) => crgopes.copy(db010s = r +: crgopes.db010s)
+          case (r: DB020) => crgopes.copy(db020s = r +: crgopes.db020s)
+        }
+        proceso2 = proceso.copy(crgopes = crgopes2 +: proceso.crgopes.diff(List(crgopes)))
+        cirbe2 = cirbe.copy(procesos = proceso2 +: cirbe.procesos.diff(List(proceso)))
+        _ <- put(cirbe2)
+      } yield registro.id
+      case GetCrgopes(crgopes_id) => for {
+        cirbe <- get
+      } yield cirbe.procesos.flatMap(_.crgopes).find(_.id == crgopes_id)
+      case Remitir(rs) => {
+        rs.foreach(r => println(s"cirbe> Remitiendo registro '${r.id}' a BdE"))
+        monad.point(())
+      }
+      case SolicitarConfirmacion(_) => monad.point(true)
+      case Validar(r, v) => monad.point(v.run(r))
     }
+  }
+
+  implicit class remove[A](xs: List[A]) {
+    def remove(a: A) = xs.diff(List(a))
   }
 }

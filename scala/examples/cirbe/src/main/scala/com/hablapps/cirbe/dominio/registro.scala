@@ -9,7 +9,7 @@ case class DB010(
   relacion: Relacion,
   errores: List[TError] = List())
     extends Registro {
-  val id = s"DB010_${relacion.codigoTitular}_${relacion.codigoOperacion}"
+  val id = s"DB010_${relacion.codigoOperacion}_${relacion.codigoTitular}"
 }
 
 case class DB020(

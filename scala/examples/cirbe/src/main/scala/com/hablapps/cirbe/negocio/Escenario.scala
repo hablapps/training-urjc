@@ -5,6 +5,7 @@ import scalaz._, Scalaz._
 import com.hablapps.cirbe.dominio._
 import com.hablapps.cirbe.proceso.validacion._, Validacion._
 import com.hablapps.cirbe.proceso.crgopes.Crgopes._
+import com.hablapps.cirbe.proceso.crgopes.StateInterpreter.toState
 
 object Escenario extends App {
 
@@ -31,4 +32,12 @@ object Escenario extends App {
       _     <- remitirEnvio(envio)
     } yield ()
   }
+
+  // Interpretation
+
+  val crgopes = Crgopes(id = "09-2015")
+  val proceso = Proceso(id = "09-2015", crgopes = List(crgopes))
+  val cirbe   = Cirbe(procesos = List(proceso))
+
+  println(escenario.foldMap(toState).run(cirbe))
 }
