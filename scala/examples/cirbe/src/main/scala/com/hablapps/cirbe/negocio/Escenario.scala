@@ -5,7 +5,7 @@ import scalaz._, Scalaz._
 import com.hablapps.cirbe.dominio._
 import com.hablapps.cirbe.proceso.validacion._, Validacion._
 import com.hablapps.cirbe.proceso.crgopes.Crgopes._
-import com.hablapps.cirbe.proceso.crgopes.StateInterpreter.toState
+import com.hablapps.cirbe.proceso.crgopes.StateInterpreter._
 
 object Escenario extends App {
 
@@ -29,15 +29,12 @@ object Escenario extends App {
     for {
       db020 <- declarar(DB020(Operacion("ABCD", V40, ZZZ)), envio)
       db010 <- declarar(DB010(Relacion("1234", "ABCD")), envio)
-      _     <- remitirEnvio(envio)
+      _     <- remitirEnvio("09-2015")
     } yield ()
   }
 
-  // Interpretation
-
-  val crgopes = Crgopes(id = "09-2015")
-  val proceso = Proceso(id = "09-2015", crgopes = List(crgopes))
-  val cirbe   = Cirbe(procesos = List(proceso))
-
-  println(escenario.foldMap(toState).run(cirbe))
+  println(escenario.foldMap(toState).run(Estado(
+    cirbe    = Cirbe(procesos = List("09-2015")),
+    procesos = Map("09-2015" -> Proceso("09-2015")),
+    crgopes  = Map("09-2015" -> Crgopes()))))
 }

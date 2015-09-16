@@ -1,8 +1,11 @@
 package com.hablapps.cirbe.proceso.crgopes
 
+import scala.reflect.runtime.universe._
+
 import scalaz._, Scalaz._
 
 import com.hablapps.cirbe.dominio._
+import com.hablapps.cirbe.dominio.Id
 import com.hablapps.cirbe.proceso.validacion._
 
 object Crgopes {
@@ -11,20 +14,22 @@ object Crgopes {
 
   sealed trait InstruccionCrgopes[A]
 
-  case class Declarar[R <: Registro](registro: R, crgopes_id: String)
+  case class Declarar[R <: Registro](registro: R, crgopes: Id[Crgopes])
     extends InstruccionCrgopes[String]
 
-  case class GetCrgopes(crgopes_id: String)
+  case class GetCrgopes(crgopes: Id[Crgopes])
     extends InstruccionCrgopes[Option[Crgopes]]
 
-  case class Remitir(registros: List[Registro])
+  case class Remitir(registros: List[Id[Registro]])
     extends InstruccionCrgopes[Unit]
 
-  case class SolicitarConfirmacion(relacion: List[(Registro, Resultado)])
+  case class SolicitarConfirmacion(relacion: List[(String, Resultado)])
     extends InstruccionCrgopes[Boolean]
 
-  case class Validar[R <: Registro](registro: R, validacion: Validacion[R])
-    extends InstruccionCrgopes[Resultado]
+  case class Validar[R <: Registro : TypeTag](registro: Id[R], validacion: Validacion[R])
+      extends InstruccionCrgopes[Resultado] {
+    val typeTag = implicitly[TypeTag[R]]
+  }
 
   type ProgramaCrgopes[A] = Free[InstruccionCrgopes, A]
 
@@ -32,21 +37,21 @@ object Crgopes {
 
   def returns[A](a: A): ProgramaCrgopes[A] = Free.point(a)
 
-  def declarar[R <: Registro](registro: R, crgopes_id: String) =
-    Free.liftF[InstruccionCrgopes, String](Declarar(registro, crgopes_id))
+  def declarar[R <: Registro](registro: R, crgopes: Id[R]) =
+    Free.liftF[InstruccionCrgopes, String](Declarar(registro, crgopes))
 
-  def validar[R <: Registro : Validacion](registro: R) =
+  def validar[R <: Registro : Validacion : TypeTag](registro: Id[R]) =
     Free.liftF[InstruccionCrgopes, Resultado](
       Validar(registro, implicitly[Validacion[R]]))
 
-  def remitir(registros: List[Registro]) =
+  def remitir(registros: List[Id[Registro]]) =
     Free.liftF[InstruccionCrgopes, Unit](Remitir(registros))
 
-  def solicitarConfirmacion(relacion: List[(Registro, Resultado)]) =
+  def solicitarConfirmacion(relacion: List[(String, Resultado)]) =
     Free.liftF[InstruccionCrgopes, Boolean](SolicitarConfirmacion(relacion))
 
-  def getCrgopes(crgopes_id: String) =
-    Free.liftF[InstruccionCrgopes, Option[Crgopes]](GetCrgopes(crgopes_id))
+  def getCrgopes(proceso: Id[Proceso]) =
+    Free.liftF[InstruccionCrgopes, Option[Crgopes]](GetCrgopes(proceso))
 
   // Combinadores
 
@@ -56,7 +61,7 @@ object Crgopes {
   def paraTodos[A, B](xs: List[A])(f: A => ProgramaCrgopes[B]): ProgramaCrgopes[List[B]] =
     traverse(xs)(f)
 
-  def remitirEnvio(crgopes_id: String)(
+  def remitirEnvio(crgopes_id: Id[Crgopes])(
       implicit v: Validacion[DB010], w: Validacion[DB020]): ProgramaCrgopes[Unit] = {
     for {
       crgopes  <- getCrgopes(crgopes_id).map(_.get)

@@ -1,7 +1,7 @@
 package com.hablapps.cirbe.dominio
 
 case class Cirbe(
-  procesos: List[Proceso] = List(),
+  procesos: List[Id[Proceso]] = List(),
   titulares: List[Titular] = List(),
   operaciones: List[Operacion] = List(),
   relaciones: List[Relacion] = List())
