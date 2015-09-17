@@ -5,12 +5,11 @@ import scalaz._, Scalaz._
 import com.hablapps.cirbe.dominio._
 import com.hablapps.cirbe.proceso.validacion._, Validacion._
 import com.hablapps.cirbe.proceso.crgopes.Crgopes._
-import com.hablapps.cirbe.proceso.crgopes.StateInterpreter._
 
-object Escenario extends App {
+object Validaciones {
 
   implicit val vDB010: Validacion[DB010] =
-    implicitly[Monoid[Validacion[DB010]]].zero
+    implicitly[Monoid[Validacion[DB010]]].zero // TODO: validación constante
 
   val v1: Validacion[DB020] =
     (Si [DB020] (_.operacion.tipoProducto esIgualA (V39, V40))
@@ -23,18 +22,4 @@ object Escenario extends App {
       EnCasoContrario R2009)
 
   implicit val vDB020: Validacion[DB020] = v1 && v2
-
-  val escenario: ProgramaCrgopes[Unit] = {
-    val envio: String = "09-2015"
-    for {
-      db020 <- declarar(DB020(Operacion("ABCD", V40, ZZZ)), envio)
-      db010 <- declarar(DB010(Relacion("1234", "ABCD")), envio)
-      _     <- remitirEnvio("09-2015")
-    } yield ()
-  }
-
-  println(escenario.foldMap(toState).run(Estado(
-    cirbe    = Cirbe(procesos = List("09-2015")),
-    procesos = Map("09-2015" -> Proceso("09-2015")),
-    crgopes  = Map("09-2015" -> Crgopes()))))
 }

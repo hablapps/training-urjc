@@ -15,7 +15,7 @@ object Crgopes {
   sealed trait InstruccionCrgopes[A]
 
   case class Declarar[R <: Registro](registro: R, crgopes: Id[Crgopes])
-    extends InstruccionCrgopes[String]
+    extends InstruccionCrgopes[Id[R]]
 
   case class GetCrgopes(crgopes: Id[Crgopes])
     extends InstruccionCrgopes[Option[Crgopes]]
@@ -38,7 +38,7 @@ object Crgopes {
   def returns[A](a: A): ProgramaCrgopes[A] = Free.point(a)
 
   def declarar[R <: Registro](registro: R, crgopes: Id[R]) =
-    Free.liftF[InstruccionCrgopes, String](Declarar(registro, crgopes))
+    Free.liftF[InstruccionCrgopes, Id[R]](Declarar(registro, crgopes))
 
   def validar[R <: Registro : Validacion : TypeTag](registro: Id[R]) =
     Free.liftF[InstruccionCrgopes, Resultado](

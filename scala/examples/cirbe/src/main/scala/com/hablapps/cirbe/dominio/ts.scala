@@ -1,6 +1,6 @@
 package com.hablapps.cirbe.dominio
 
-trait TError
+trait TError // TODO: TError => Error
 case object R2008 extends TError
 case object R2009 extends TError
 
