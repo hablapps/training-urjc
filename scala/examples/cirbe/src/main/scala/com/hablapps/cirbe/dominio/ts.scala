@@ -12,3 +12,7 @@ case object V54 extends TProducto
 
 trait TRiesgo
 case object ZZZ extends TRiesgo
+
+trait EstadoCrgopes
+case object Activo extends EstadoCrgopes
+case object Finalizado extends EstadoCrgopes

@@ -14,11 +14,19 @@ object Crgopes {
 
   sealed trait InstruccionCrgopes[A]
 
+  case class Aseverar(condicion: Boolean, descripcion: Option[String] = None)
+    extends InstruccionCrgopes[Unit]
+
   case class Declarar[R <: Registro](registro: R, crgopes: Id[Crgopes])
     extends InstruccionCrgopes[Id[R]]
 
   case class GetCrgopes(crgopes: Id[Crgopes])
     extends InstruccionCrgopes[Option[Crgopes]]
+
+  case class GetRegistro[R <: Registro : TypeTag](registro: Id[R])
+      extends InstruccionCrgopes[R] {
+    val typeTag = implicitly[TypeTag[R]]
+  }
 
   case class Remitir(registros: List[Id[Registro]])
     extends InstruccionCrgopes[Unit]
@@ -37,7 +45,14 @@ object Crgopes {
 
   def returns[A](a: A): ProgramaCrgopes[A] = Free.point(a)
 
-  def declarar[R <: Registro](registro: R, crgopes: Id[R]) =
+  def aseverar(condicion: Boolean, descripcion: Option[String] = None)
+      : ProgramaCrgopes[Unit] =
+    Free.liftF[InstruccionCrgopes, Unit](Aseverar(condicion, descripcion))
+
+  def aseverar(condicion: Boolean, descripcion: String): ProgramaCrgopes[Unit] =
+    aseverar(condicion, Option(descripcion))
+
+  def declarar[R <: Registro](registro: R, crgopes: Id[Crgopes]) =
     Free.liftF[InstruccionCrgopes, Id[R]](Declarar(registro, crgopes))
 
   def validar[R <: Registro : Validacion : TypeTag](registro: Id[R]) =
@@ -53,6 +68,9 @@ object Crgopes {
   def getCrgopes(proceso: Id[Proceso]) =
     Free.liftF[InstruccionCrgopes, Option[Crgopes]](GetCrgopes(proceso))
 
+  def getRegistro[R <: Registro : TypeTag](registro: Id[R]) =
+    Free.liftF[InstruccionCrgopes, R](GetRegistro(registro))
+
   // Combinadores
 
   val monad = Monad[ProgramaCrgopes]
@@ -60,6 +78,8 @@ object Crgopes {
 
   def paraTodos[A, B](xs: List[A])(f: A => ProgramaCrgopes[B]): ProgramaCrgopes[List[B]] =
     traverse(xs)(f)
+
+  def finalizar(crgopes: Id[Crgopes]) = declarar(Finalizar(), crgopes)
 
   def remitirEnvio(crgopes_id: Id[Crgopes])(
       implicit v: Validacion[DB010], w: Validacion[DB020]): ProgramaCrgopes[Unit] = {

@@ -33,6 +33,12 @@ object StateInterpreter {
         db020s = db020s + (db020.id -> db020),
         crgopes = crgopes.updated(crgopes_id, fresh))
     }
+
+    def finalizar(crgopes_id: Id[Crgopes]): Estado = {
+      copy(crgopes = crgopes.updated(
+        crgopes_id,
+        crgopes(crgopes_id).copy(estado = Finalizado)))
+    }
   }
 
   type StateCirbe[A] = State[Estado, A]
@@ -40,17 +46,32 @@ object StateInterpreter {
 
   def toState = new (InstruccionCrgopes ~> StateCirbe) {
     def apply[A](ins: InstruccionCrgopes[A]): StateCirbe[A] = ins match {
+      case Aseverar(condicion, descripcion) => {
+        if (condicion)
+          monad.point(())
+        else
+          throw new Error("Desc: " ++ descripcion.getOrElse("<vacía>"))
+      }
       case Declarar(registro, crgopes_id) => for {
         estado <- (get: StateCirbe[Estado])
         estado2 = registro match {
           case (r: DB010) => estado.addDB010(r, crgopes_id)
           case (r: DB020) => estado.addDB020(r, crgopes_id)
+          case (_: Finalizar) => estado.finalizar(crgopes_id)
         }
         _ <- put(estado2)
       } yield registro.id
       case GetCrgopes(crgopes_id) => for {
         estado <- (get: StateCirbe[Estado])
       } yield estado.crgopes.get(crgopes_id)
+      case ins@GetRegistro(registro_id) => registro_id match {
+        case (id: Id[DB010]) if ins.typeTag.tpe <:< typeOf[DB010] => {
+          get.map(_.db010s(registro_id).asInstanceOf[A])
+        }
+        case (id: Id[DB020]) if ins.typeTag.tpe <:< typeOf[DB020] => {
+          get.map(_.db020s(registro_id).asInstanceOf[A])
+        }
+      }
       case Remitir(rs) => {
         rs.foreach(r => println(s"cirbe> Remitiendo registro '$r' a BdE"))
         monad.point(())
