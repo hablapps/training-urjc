@@ -20,10 +20,8 @@ object Crgopes {
   case class GetCrgopes(crgopes: Id[Crgopes])
     extends InstruccionCrgopes[Option[Crgopes]]
 
-  case class GetRegistro[R <: Registro : TypeTag](registro: Id[R])
-      extends InstruccionCrgopes[R] {
-    val typeTag = implicitly[TypeTag[R]]
-  }
+  case class GetRegistro[R <: Registro](registro: Id[R])(
+    implicit val typeTag: TypeTag[R]) extends InstruccionCrgopes[R]
 
   case class PutRegistro[R <: Registro](registro: R, crgopes: Id[Crgopes])
     extends InstruccionCrgopes[Id[R]]
@@ -34,10 +32,8 @@ object Crgopes {
   case class SolicitarConfirmacion(relacion: List[(String, Resultado)])
     extends InstruccionCrgopes[Boolean]
 
-  case class Validar[R <: Registro : TypeTag](registro: Id[R], validacion: Validacion[R])
-      extends InstruccionCrgopes[Resultado] {
-    val typeTag = implicitly[TypeTag[R]]
-  }
+  case class Validar[R <: Registro](registro: Id[R], validacion: Validacion[R])(
+    implicit val typeTag: TypeTag[R]) extends InstruccionCrgopes[Resultado]
 
   type ProgramaCrgopes[A] = Free[InstruccionCrgopes, A]
 

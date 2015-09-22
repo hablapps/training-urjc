@@ -161,7 +161,7 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val programa = declarar(DB020(Operacion("ABCD", V40, ZZZ)), envio)
 
-    intercept[Error] {
+    intercept[Exception] {
       programa.foldMap(toState).exec(inicial)
     }
   }

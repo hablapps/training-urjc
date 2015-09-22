@@ -55,7 +55,7 @@ object StateInterpreter {
         }
         _ <- put(estado2)
       } yield registro.id
-      case Fallar(mensaje) => throw new Error(mensaje)
+      case Fallar(mensaje) => throw new Exception(mensaje)
       case GetCrgopes(crgopes_id) => for {
         estado <- (get: StateCirbe[Estado])
       } yield estado.crgopes.get(crgopes_id)

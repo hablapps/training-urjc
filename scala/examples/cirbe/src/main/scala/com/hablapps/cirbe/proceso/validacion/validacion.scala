@@ -31,7 +31,7 @@ case object Valido extends Resultado {
   def esValido = true
 }
 
-case class Invalido(errores: NonEmptyList[TError]) extends Resultado {
+case class Invalido(errores: NonEmptyList[Error]) extends Resultado {
   def esValido = false
 }
 
@@ -61,7 +61,7 @@ object Validacion {
 case class SiBuilder[A](
     condicion: Option[A => Boolean] = None,
     entonces: Option[A => Boolean]  = None,
-    enCasoContrario: Option[TError]  = None) {
+    enCasoContrario: Option[Error]  = None) {
 
   def Condicion(f: A => Boolean): SiBuilder[A] =
     copy(condicion = Some(f))
@@ -69,7 +69,7 @@ case class SiBuilder[A](
   def Entonces(f: A => Boolean): SiBuilder[A] =
     copy(entonces = Some(f))
 
-  def EnCasoContrario(err: TError): SiBuilder[A] =
+  def EnCasoContrario(err: Error): SiBuilder[A] =
     copy(enCasoContrario = Option(err))
 }
 
