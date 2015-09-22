@@ -14,9 +14,6 @@ object Crgopes {
 
   sealed trait InstruccionCrgopes[A]
 
-  case class Aseverar(condicion: Boolean, descripcion: Option[String] = None)
-    extends InstruccionCrgopes[Unit]
-
   case class Fallar[A](mensaje: String)
     extends InstruccionCrgopes[A]
 
@@ -48,25 +45,8 @@ object Crgopes {
 
   def returns[A](a: A): ProgramaCrgopes[A] = Free.point(a)
 
-  def aseverar(condicion: Boolean, descripcion: Option[String] = None)
-      : ProgramaCrgopes[Unit] =
-    Free.liftF[InstruccionCrgopes, Unit](Aseverar(condicion, descripcion))
-
-  def aseverar(condicion: Boolean, descripcion: String): ProgramaCrgopes[Unit] =
-    aseverar(condicion, Option(descripcion))
-
-  def putRegistro[R <: Registro](registro: R, crgopes: Id[Crgopes]) =
-    Free.liftF[InstruccionCrgopes, Id[R]](PutRegistro(registro, crgopes))
-
-  def validar[R <: Registro : Validacion : TypeTag](registro: Id[R]) =
-    Free.liftF[InstruccionCrgopes, Resultado](
-      Validar(registro, implicitly[Validacion[R]]))
-
-  def remitir(registros: List[Id[Registro]]) =
-    Free.liftF[InstruccionCrgopes, Unit](Remitir(registros))
-
-  def solicitarConfirmacion(relacion: List[(String, Resultado)]) =
-    Free.liftF[InstruccionCrgopes, Boolean](SolicitarConfirmacion(relacion))
+  def fallar[A](mensaje: String) =
+    Free.liftF[InstruccionCrgopes, A](Fallar[A](mensaje))
 
   def getCrgopes(crgopes_id: Id[Crgopes]) =
     Free.liftF[InstruccionCrgopes, Option[Crgopes]](GetCrgopes(crgopes_id))
@@ -74,8 +54,18 @@ object Crgopes {
   def getRegistro[R <: Registro : TypeTag](registro: Id[R]) =
     Free.liftF[InstruccionCrgopes, R](GetRegistro(registro))
 
-  def fallar[A](mensaje: String) =
-    Free.liftF[InstruccionCrgopes, A](Fallar[A](mensaje))
+  def putRegistro[R <: Registro](registro: R, crgopes: Id[Crgopes]) =
+    Free.liftF[InstruccionCrgopes, Id[R]](PutRegistro(registro, crgopes))
+
+  def remitir(registros: List[Id[Registro]]) =
+    Free.liftF[InstruccionCrgopes, Unit](Remitir(registros))
+
+  def solicitarConfirmacion(relacion: List[(String, Resultado)]) =
+    Free.liftF[InstruccionCrgopes, Boolean](SolicitarConfirmacion(relacion))
+
+  def validar[R <: Registro : Validacion : TypeTag](registro: Id[R]) =
+    Free.liftF[InstruccionCrgopes, Resultado](
+      Validar(registro, implicitly[Validacion[R]]))
 
   // Combinadores
 
@@ -84,6 +74,17 @@ object Crgopes {
 
   def paraTodos[A, B](xs: List[A])(f: A => ProgramaCrgopes[B]): ProgramaCrgopes[List[B]] =
     traverse(xs)(f)
+
+  def aseverar(condicion: Boolean, descripcion: Option[String] = None)
+      : ProgramaCrgopes[Unit] = {
+    if (condicion)
+      monad.point(())
+    else
+      fallar(descripcion.getOrElse("<sin descripción>"))
+  }
+
+  def aseverar(condicion: Boolean, descripcion: String): ProgramaCrgopes[Unit] =
+    aseverar(condicion, Option(descripcion))
 
   implicit class FilterHelper[A](programa: ProgramaCrgopes[A]) {
     def withFilter(f: A => Boolean): ProgramaCrgopes[A] = for {

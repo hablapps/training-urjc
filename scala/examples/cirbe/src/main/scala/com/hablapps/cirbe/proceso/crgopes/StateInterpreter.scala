@@ -46,12 +46,6 @@ object StateInterpreter {
 
   def toState = new (InstruccionCrgopes ~> StateCirbe) {
     def apply[A](ins: InstruccionCrgopes[A]): StateCirbe[A] = ins match {
-      case Aseverar(condicion, descripcion) => {
-        if (condicion)
-          monad.point(())
-        else
-          throw new Error("Desc: " ++ descripcion.getOrElse("<vacía>"))
-      }
       case PutRegistro(registro, crgopes_id) => for {
         estado <- (get: StateCirbe[Estado])
         estado2 = registro match {
