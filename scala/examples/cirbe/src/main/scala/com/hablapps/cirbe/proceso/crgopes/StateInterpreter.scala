@@ -68,7 +68,6 @@ object StateInterpreter {
         }
       }
       case Remitir(rs) => {
-        println("Remitiendo registros")
         rs.foreach(r => println(s"cirbe> Remitiendo registro '$r' a BdE"))
         monad.point(())
       }
@@ -104,9 +103,5 @@ object StateInterpreter {
         } yield resultado
       }
     }
-  }
-
-  implicit class remove[A](xs: List[A]) {
-    def remove(a: A) = xs.diff(List(a))
   }
 }

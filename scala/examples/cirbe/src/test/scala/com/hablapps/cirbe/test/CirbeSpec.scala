@@ -36,26 +36,30 @@ class CirbeSpec extends FlatSpec with Matchers {
   // otros con los que no contábamos y que por tanto sean erróneos (o no).
   "Cirbe" should "comparar contra valores puntuales del estado" in {
 
-    val envio = "09-2015"
+    val proceso = "09-2015"
+    val crgopes = "09-2015"
+
+    val id1: Id[DB010] = "DB010_1234_ABCD"
+    val id2: Id[DB020] = "DB020_ABCD"
 
     val inicial = Estado(
-      cirbe    = Cirbe(procesos = List(envio)),
-      procesos = Map(envio -> Proceso(envio)),
-      crgopes  = Map(envio -> Crgopes(
-        db010s = List("DB010_1234_ABCD"),
-        db020s = List("DB020_ABCD"))),
-      db010s = Map("DB010_1234_ABCD" -> DB010(Relacion("1234", "ABCD"))),
-      db020s = Map("DB020_ABCD" -> DB020(Operacion("ABCD", V40, ZZZ))))
+      cirbe    = Cirbe(procesos = List(proceso)),
+      procesos = Map(proceso -> Proceso(crgopes)),
+      crgopes  = Map(crgopes -> Crgopes(
+        db010s = List(id1),
+        db020s = List(id2))),
+      db010s = Map(id1 -> DB010(Relacion("1234", "ABCD"))),
+      db020s = Map(id2 -> DB020(Operacion("ABCD", V40, ZZZ))))
 
     val programa = for {
-      _ <- validar("DB010_1234_ABCD": Id[DB010])
-      _ <- validar("DB020_ABCD": Id[DB020])
+      _ <- validar(id1: Id[DB010])
+      _ <- validar(id2: Id[DB020])
     } yield ()
 
     val resultado = programa.foldMap(toState).exec(inicial)
 
-    resultado.db010s("DB010_1234_ABCD").errores shouldBe List()
-    resultado.db020s("DB020_ABCD").errores shouldBe List(R2008)
+    resultado.db010s(id1).errores shouldBe List()
+    resultado.db020s(id2).errores shouldBe List(R2008)
   }
 
   // Esta versión cambio respecto la anterior en cuanto a la forma de contrastar
@@ -68,20 +72,24 @@ class CirbeSpec extends FlatSpec with Matchers {
   // valores.
   it should "comparar contra estado completo" in {
 
-    val envio = "09-2015"
+    val proceso = "09-2015"
+    val crgopes = "09-2015"
+
+    val id1: Id[DB010] = "DB010_1234_ABCD"
+    val id2: Id[DB020] = "DB020_ABCD"
 
     val inicial = Estado(
-      cirbe    = Cirbe(procesos = List(envio)),
-      procesos = Map(envio -> Proceso(envio)),
-      crgopes  = Map(envio -> Crgopes(
-        db010s = List("DB010_1234_ABCD"),
-        db020s = List("DB020_ABCD"))),
-      db010s = Map("DB010_1234_ABCD" -> DB010(Relacion("1234", "ABCD"))),
-      db020s = Map("DB020_ABCD" -> DB020(Operacion("ABCD", V40, ZZZ))))
+      cirbe    = Cirbe(procesos = List(proceso)),
+      procesos = Map(proceso -> Proceso(crgopes)),
+      crgopes  = Map(crgopes -> Crgopes(
+        db010s = List(id1),
+        db020s = List(id2))),
+      db010s = Map(id1 -> DB010(Relacion("1234", "ABCD"))),
+      db020s = Map(id2 -> DB020(Operacion("ABCD", V40, ZZZ))))
 
     val programa = for {
-      _     <- validar("DB010_1234_ABCD": Id[DB010])
-      _     <- validar("DB020_ABCD": Id[DB020])
+      _     <- validar(id1: Id[DB010])
+      _     <- validar(id2: Id[DB020])
     } yield ()
 
     val resultado = programa.foldMap(toState).exec(inicial)
@@ -106,19 +114,20 @@ class CirbeSpec extends FlatSpec with Matchers {
   // entre nuestro repertorio de primitivas.
   it should "hacer checks contra valores puntuales de forma nativa" in {
 
-    val envio = "09-2015"
-
-    val inicial = Estado(
-      cirbe    = Cirbe(procesos = List(envio)),
-      procesos = Map(envio -> Proceso(envio)),
-      crgopes  = Map(envio -> Crgopes(
-        db010s = List("DB010_1234_ABCD"),
-        db020s = List("DB020_ABCD"))),
-      db010s = Map("DB010_1234_ABCD" -> DB010(Relacion("1234", "ABCD"))),
-      db020s = Map("DB020_ABCD" -> DB020(Operacion("ABCD", V40, ZZZ))))
+    val proceso = "09-2015"
+    val crgopes = "09-2015"
 
     val id1: Id[DB010] = "DB010_1234_ABCD"
     val id2: Id[DB020] = "DB020_ABCD"
+
+    val inicial = Estado(
+      cirbe    = Cirbe(procesos = List(proceso)),
+      procesos = Map(proceso -> Proceso(crgopes)),
+      crgopes  = Map(crgopes -> Crgopes(
+        db010s = List(id1),
+        db020s = List(id2))),
+      db010s = Map(id1 -> DB010(Relacion("1234", "ABCD"))),
+      db020s = Map(id2 -> DB020(Operacion("ABCD", V40, ZZZ))))
 
     val programa = for {
       _  <- validar(id1)
@@ -129,7 +138,7 @@ class CirbeSpec extends FlatSpec with Matchers {
       _  <- aseverar(r2.errores == List(R2008), "Se debería generar 'R2008'")
     } yield ()
 
-    programa.foldMap(toState).exec(inicial)
+    programa.foldMap(toState).exec(inicial) // TODO: should be right
   }
 
   it should "permitir finalizar un proceso activo" in {
@@ -152,14 +161,15 @@ class CirbeSpec extends FlatSpec with Matchers {
 
   it should "fallar con declaración finalizada" in {
 
-    val envio = "09-2015"
+    val proceso = "09-2015"
+    val crgopes = "09-2015"
 
     val inicial = Estado(
-      cirbe    = Cirbe(procesos = List(envio)),
-      procesos = Map(envio -> Proceso(envio)),
-      crgopes  = Map(envio -> Crgopes(Finalizado)))
+      cirbe    = Cirbe(procesos = List(proceso)),
+      procesos = Map(proceso -> Proceso(crgopes)),
+      crgopes  = Map(crgopes -> Crgopes(Finalizado)))
 
-    val programa = declarar(DB020(Operacion("ABCD", V40, ZZZ)), envio)
+    val programa = declarar(DB020(Operacion("ABCD", V40, ZZZ)), crgopes)
 
     intercept[Exception] {
       programa.foldMap(toState).exec(inicial)
