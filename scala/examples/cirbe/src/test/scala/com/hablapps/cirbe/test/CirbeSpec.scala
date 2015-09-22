@@ -142,7 +142,7 @@ class CirbeSpec extends FlatSpec with Matchers {
       crgopes  = Map(envio -> Crgopes(Activo)))
 
     val programa = for {
-      _       <- declarar(Finalizar(), envio)
+      _       <- finalizar(envio)
       crgopes <- getCrgopes(envio)
       _       <- aseverar(crgopes.get.estado == Finalizado)
     } yield ()

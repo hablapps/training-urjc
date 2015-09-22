@@ -67,13 +67,10 @@ object Crgopes {
     Free.liftF[InstruccionCrgopes, Resultado](
       Validar(registro, implicitly[Validacion[R]]))
 
-  // Combinadores
+  // Constructores derivados y lógica
 
   val monad = Monad[ProgramaCrgopes]
   import monad.{ traverse, whenM }
-
-  def paraTodos[A, B](xs: List[A])(f: A => ProgramaCrgopes[B]): ProgramaCrgopes[List[B]] =
-    traverse(xs)(f)
 
   def aseverar(condicion: Boolean, descripcion: Option[String] = None)
       : ProgramaCrgopes[Unit] = {
@@ -86,19 +83,9 @@ object Crgopes {
   def aseverar(condicion: Boolean, descripcion: String): ProgramaCrgopes[Unit] =
     aseverar(condicion, Option(descripcion))
 
-  implicit class FilterHelper[A](programa: ProgramaCrgopes[A]) {
-    def withFilter(f: A => Boolean): ProgramaCrgopes[A] = for {
-      a <- programa
-      _ <- if (f(a))
-        monad.point(())
-      else
-        fallar[A]("withFilter - no se cumple la condición")
-    } yield a
-  }
-
   def declarar[R <: Registro](registro: R, crgopes_id: Id[Crgopes]) = for {
-    optCrgopes <- getCrgopes(crgopes_id)
-    if optCrgopes.fold(false)(crgopes => crgopes.estado == Activo)
+    crgopes <- getCrgopes(crgopes_id)
+    if crgopes.isDefined && crgopes.get.estado == Activo
     id <- putRegistro(registro, crgopes_id)
   } yield id
 
@@ -114,5 +101,19 @@ object Crgopes {
       ok       <- solicitarConfirmacion(relacion)
       _        <- whenM(ok)(remitir(relacion.filter(_._2.esValido).map(_._1)))
     } yield ()
+  }
+
+  // Combinadores generales y utilidades
+
+  def paraTodos[A, B](xs: List[A])(f: A => ProgramaCrgopes[B]) = traverse(xs)(f)
+
+  implicit class FilterHelper[A](programa: ProgramaCrgopes[A]) {
+    def withFilter(f: A => Boolean): ProgramaCrgopes[A] = for {
+      a <- programa
+      _ <- if (f(a))
+        monad.point(())
+      else
+        fallar[A]("withFilter - no se cumple la condición")
+    } yield a
   }
 }
