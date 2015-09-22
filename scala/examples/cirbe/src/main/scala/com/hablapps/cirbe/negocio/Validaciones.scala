@@ -8,9 +8,6 @@ import com.hablapps.cirbe.proceso.crgopes.Crgopes._
 
 object Validaciones {
 
-  implicit val vDB010: Validacion[DB010] =
-    implicitly[Monoid[Validacion[DB010]]].zero // TODO: validación constante
-
   val v1: Validacion[DB020] =
     (Si [DB020] (_.operacion.tipoProducto esIgualA (V39, V40))
       Entonces  (_.operacion.tipoRiesgo esDistintoDe ZZZ)

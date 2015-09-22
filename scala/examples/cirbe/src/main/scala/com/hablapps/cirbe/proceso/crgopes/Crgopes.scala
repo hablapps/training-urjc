@@ -59,9 +59,10 @@ object Crgopes {
   def solicitarConfirmacion(relacion: List[(String, Resultado)]) =
     Free.liftF[InstruccionCrgopes, Boolean](SolicitarConfirmacion(relacion))
 
-  def validar[R <: Registro : Validacion : TypeTag](registro: Id[R]) =
+  def validar[R <: Registro : TypeTag](registro: Id[R])(
+      implicit validacion: Validacion[R] = implicitly[Monoid[Validacion[R]]].zero) =
     Free.liftF[InstruccionCrgopes, Resultado](
-      Validar(registro, implicitly[Validacion[R]]))
+      Validar(registro, validacion))
 
   // Constructores derivados y lógica
 
@@ -70,7 +71,7 @@ object Crgopes {
 
   def aseverar(
       condicion: Boolean,
-      descripcion: String = "<sin descripción"): ProgramaCrgopes[Unit] = {
+      descripcion: String = "<sin descripción>"): ProgramaCrgopes[Unit] = {
     if (condicion) monad.point(()) else fallar(descripcion)
   }
 
