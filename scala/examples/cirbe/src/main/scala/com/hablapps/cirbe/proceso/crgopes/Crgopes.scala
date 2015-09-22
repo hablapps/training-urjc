@@ -72,16 +72,11 @@ object Crgopes {
   val monad = Monad[ProgramaCrgopes]
   import monad.{ traverse, whenM }
 
-  def aseverar(condicion: Boolean, descripcion: Option[String] = None)
-      : ProgramaCrgopes[Unit] = {
-    if (condicion)
-      monad.point(())
-    else
-      fallar(descripcion.getOrElse("<sin descripción>"))
+  def aseverar(
+      condicion: Boolean,
+      descripcion: String = "<sin descripción"): ProgramaCrgopes[Unit] = {
+    if (condicion) monad.point(()) else fallar(descripcion)
   }
-
-  def aseverar(condicion: Boolean, descripcion: String): ProgramaCrgopes[Unit] =
-    aseverar(condicion, Option(descripcion))
 
   def declarar[R <: Registro](registro: R, crgopes_id: Id[Crgopes]) = for {
     crgopes <- getCrgopes(crgopes_id)
