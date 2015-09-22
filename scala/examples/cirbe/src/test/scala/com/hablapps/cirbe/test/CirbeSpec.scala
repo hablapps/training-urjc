@@ -102,8 +102,8 @@ class CirbeSpec extends FlatSpec with Matchers {
   // mismos problemas que ya quedaron descritos en la versión inicial, pero
   // obtenemos una ganancia en el hecho de que no tenemos por qué conocer el
   // estado interno para extraer los valores puntuales. Es una solución más
-  // integrada, a costa de acoplar una instrucción un tanto artificial entre
-  // nuestro repertorio de primitivas.
+  // integrada, a costa de acoplar una instrucción (a mi juicio) artificial
+  // entre nuestro repertorio de primitivas.
   it should "hacer checks contra valores puntuales de forma nativa" in {
 
     val envio = "09-2015"
@@ -130,5 +130,39 @@ class CirbeSpec extends FlatSpec with Matchers {
     } yield ()
 
     programa.foldMap(toState).exec(inicial)
+  }
+
+  it should "permitir finalizar un proceso activo" in {
+
+    val envio = "09-2015"
+
+    val inicial = Estado(
+      cirbe    = Cirbe(procesos = List(envio)),
+      procesos = Map(envio -> Proceso(envio)),
+      crgopes  = Map(envio -> Crgopes(Activo)))
+
+    val programa = for {
+      _       <- declarar(Finalizar(), envio)
+      crgopes <- getCrgopes(envio)
+      _       <- aseverar(crgopes.get.estado == Finalizado)
+    } yield ()
+
+    programa.foldMap(toState).exec(inicial)
+  }
+
+  it should "fallar con declaración finalizada" in {
+
+    val envio = "09-2015"
+
+    val inicial = Estado(
+      cirbe    = Cirbe(procesos = List(envio)),
+      procesos = Map(envio -> Proceso(envio)),
+      crgopes  = Map(envio -> Crgopes(Finalizado)))
+
+    val programa = declarar(DB020(Operacion("ABCD", V40, ZZZ)), envio)
+
+    intercept[Error] {
+      programa.foldMap(toState).exec(inicial)
+    }
   }
 }

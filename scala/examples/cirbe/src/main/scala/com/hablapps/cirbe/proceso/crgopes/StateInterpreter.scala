@@ -52,7 +52,7 @@ object StateInterpreter {
         else
           throw new Error("Desc: " ++ descripcion.getOrElse("<vacía>"))
       }
-      case Declarar(registro, crgopes_id) => for {
+      case PutRegistro(registro, crgopes_id) => for {
         estado <- (get: StateCirbe[Estado])
         estado2 = registro match {
           case (r: DB010) => estado.addDB010(r, crgopes_id)
@@ -61,6 +61,7 @@ object StateInterpreter {
         }
         _ <- put(estado2)
       } yield registro.id
+      case Fallar(mensaje) => throw new Error(mensaje)
       case GetCrgopes(crgopes_id) => for {
         estado <- (get: StateCirbe[Estado])
       } yield estado.crgopes.get(crgopes_id)
@@ -73,6 +74,7 @@ object StateInterpreter {
         }
       }
       case Remitir(rs) => {
+        println("Remitiendo registros")
         rs.foreach(r => println(s"cirbe> Remitiendo registro '$r' a BdE"))
         monad.point(())
       }

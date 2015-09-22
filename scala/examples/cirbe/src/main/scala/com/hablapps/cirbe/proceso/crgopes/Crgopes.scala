@@ -17,8 +17,8 @@ object Crgopes {
   case class Aseverar(condicion: Boolean, descripcion: Option[String] = None)
     extends InstruccionCrgopes[Unit]
 
-  case class Declarar[R <: Registro](registro: R, crgopes: Id[Crgopes])
-    extends InstruccionCrgopes[Id[R]]
+  case class Fallar[A](mensaje: String)
+    extends InstruccionCrgopes[A]
 
   case class GetCrgopes(crgopes: Id[Crgopes])
     extends InstruccionCrgopes[Option[Crgopes]]
@@ -27,6 +27,9 @@ object Crgopes {
       extends InstruccionCrgopes[R] {
     val typeTag = implicitly[TypeTag[R]]
   }
+
+  case class PutRegistro[R <: Registro](registro: R, crgopes: Id[Crgopes])
+    extends InstruccionCrgopes[Id[R]]
 
   case class Remitir(registros: List[Id[Registro]])
     extends InstruccionCrgopes[Unit]
@@ -52,8 +55,8 @@ object Crgopes {
   def aseverar(condicion: Boolean, descripcion: String): ProgramaCrgopes[Unit] =
     aseverar(condicion, Option(descripcion))
 
-  def declarar[R <: Registro](registro: R, crgopes: Id[Crgopes]) =
-    Free.liftF[InstruccionCrgopes, Id[R]](Declarar(registro, crgopes))
+  def putRegistro[R <: Registro](registro: R, crgopes: Id[Crgopes]) =
+    Free.liftF[InstruccionCrgopes, Id[R]](PutRegistro(registro, crgopes))
 
   def validar[R <: Registro : Validacion : TypeTag](registro: Id[R]) =
     Free.liftF[InstruccionCrgopes, Resultado](
@@ -65,11 +68,14 @@ object Crgopes {
   def solicitarConfirmacion(relacion: List[(String, Resultado)]) =
     Free.liftF[InstruccionCrgopes, Boolean](SolicitarConfirmacion(relacion))
 
-  def getCrgopes(proceso: Id[Proceso]) =
-    Free.liftF[InstruccionCrgopes, Option[Crgopes]](GetCrgopes(proceso))
+  def getCrgopes(crgopes_id: Id[Crgopes]) =
+    Free.liftF[InstruccionCrgopes, Option[Crgopes]](GetCrgopes(crgopes_id))
 
   def getRegistro[R <: Registro : TypeTag](registro: Id[R]) =
     Free.liftF[InstruccionCrgopes, R](GetRegistro(registro))
+
+  def fallar[A](mensaje: String) =
+    Free.liftF[InstruccionCrgopes, A](Fallar[A](mensaje))
 
   // Combinadores
 
@@ -78,6 +84,22 @@ object Crgopes {
 
   def paraTodos[A, B](xs: List[A])(f: A => ProgramaCrgopes[B]): ProgramaCrgopes[List[B]] =
     traverse(xs)(f)
+
+  implicit class FilterHelper[A](programa: ProgramaCrgopes[A]) {
+    def withFilter(f: A => Boolean): ProgramaCrgopes[A] = for {
+      a <- programa
+      _ <- if (f(a))
+        monad.point(())
+      else
+        fallar[A]("withFilter - no se cumple la condición")
+    } yield a
+  }
+
+  def declarar[R <: Registro](registro: R, crgopes_id: Id[Crgopes]) = for {
+    optCrgopes <- getCrgopes(crgopes_id)
+    if optCrgopes.fold(false)(crgopes => crgopes.estado == Activo)
+    id <- putRegistro(registro, crgopes_id)
+  } yield id
 
   def finalizar(crgopes: Id[Crgopes]) = declarar(Finalizar(), crgopes)
 
