@@ -8,6 +8,7 @@ import com.hablapps.cirbe.{ dominio, negocio, proceso }
 import dominio._, dominio.{ Crgopes, Id }
 import negocio.Validaciones._
 import proceso.validacion._, proceso.crgopes._, proceso.crgopes.Crgopes._
+import proceso.crgopes.Crgopes.test
 import StateInterpreter._
 
 class CirbeSpec extends FlatSpec with Matchers {
@@ -105,13 +106,13 @@ class CirbeSpec extends FlatSpec with Matchers {
   // comparaba valores puntuales extraídos de un estado final. El enfoque, sin
   // embargo, es diferente, ya que la comprobación de que la lógica es correcta
   // se hace desde el interior de la for comprehension, mediante la instrucción
-  // "aseverar" (~ assert). Si la condición no se cumple, se emitirá un mensaje
-  // de error. ¿Qué ganamos con esta alternativa? Pues bien, seguimos con los
-  // mismos problemas que ya quedaron descritos en la versión inicial, pero
-  // obtenemos una ganancia en el hecho de que no tenemos por qué conocer el
-  // estado interno para extraer los valores puntuales. Es una solución más
-  // integrada, a costa de acoplar una instrucción (a mi juicio) artificial
-  // entre nuestro repertorio de primitivas.
+  // "test". Si la condición no se cumple, se emitirá un mensaje de error.
+  // ¿Qué ganamos con esta alternativa? Pues bien, seguimos con los mismos
+  // problemas que ya quedaron descritos en la versión inicial, pero obtenemos
+  // una ganancia en el hecho de que no tenemos por qué conocer el estado
+  // interno para extraer los valores puntuales. Es una solución más integrada,
+  // a costa de acoplar una instrucción (a mi juicio) artificial entre nuestro
+  // repertorio de primitivas.
   it should "hacer checks contra valores puntuales de forma nativa" in {
 
     val proceso = "09-2015"
@@ -134,8 +135,8 @@ class CirbeSpec extends FlatSpec with Matchers {
       _  <- validar(id2)
       r1 <- getRegistro(id1)
       r2 <- getRegistro(id2)
-      _  <- aseverar(r1.errores == List.empty)
-      _  <- aseverar(r2.errores == List(R2008), "Se debería generar 'R2008'")
+      _  <- test(r1.errores == List.empty)
+      _  <- test(r2.errores == List(R2008), "Se debería generar 'R2008'")
     } yield ()
 
     programa.foldMap(toState).exec(inicial) // TODO: should be right
@@ -153,7 +154,7 @@ class CirbeSpec extends FlatSpec with Matchers {
     val programa = for {
       _       <- finalizar(envio)
       crgopes <- getCrgopes(envio)
-      _       <- aseverar(crgopes.get.estado == Finalizado)
+      _       <- test(crgopes.get.estado == Finalizado)
     } yield ()
 
     programa.foldMap(toState).exec(inicial)

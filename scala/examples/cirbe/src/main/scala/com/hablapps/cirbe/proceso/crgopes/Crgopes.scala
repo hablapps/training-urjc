@@ -69,7 +69,7 @@ object Crgopes {
   val monad = Monad[ProgramaCrgopes]
   import monad.{ traverse, whenM }
 
-  def aseverar(
+  def test(
       condicion: Boolean,
       descripcion: String = "<sin descripción>"): ProgramaCrgopes[Unit] = {
     if (condicion) monad.point(()) else fallar(descripcion)
