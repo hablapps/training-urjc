@@ -70,9 +70,17 @@ object Crgopes {
   import monad.{ traverse, whenM }
 
   def test(
-      condicion: Boolean,
-      descripcion: String = "<sin descripción>"): ProgramaCrgopes[Unit] = {
-    if (condicion) monad.point(()) else fallar(descripcion)
+      expresion: => Unit,
+      descripcion: Option[String] = None): ProgramaCrgopes[Unit] = {
+    try {
+      expresion
+      monad.point(())
+    } catch {
+      case e: org.scalatest.TestFailedException => {
+        fallar(descripcion.getOrElse(descripcion.getOrElse(e.getMessage)))
+      }
+      case e: Exception => fallar(descripcion.getOrElse("<sin descripción>"))
+    }
   }
 
   def declarar[R <: Registro](registro: R, crgopes_id: Id[Crgopes]) = for {

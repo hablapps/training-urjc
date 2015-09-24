@@ -135,11 +135,11 @@ class CirbeSpec extends FlatSpec with Matchers {
       _  <- validar(id2)
       r1 <- getRegistro(id1)
       r2 <- getRegistro(id2)
-      _  <- test(r1.errores == List.empty)
-      _  <- test(r2.errores == List(R2008), "Se debería generar 'R2008'")
+      _  <- test(r1.errores shouldBe List.empty)
+      _  <- test(r2.errores should equal (List(R2008)))
     } yield ()
 
-    programa.foldMap(toState).exec(inicial) // TODO: should be right
+    programa.foldMap(toState).exec(inicial)
   }
 
   it should "permitir finalizar un proceso activo" in {
@@ -154,7 +154,7 @@ class CirbeSpec extends FlatSpec with Matchers {
     val programa = for {
       _       <- finalizar(envio)
       crgopes <- getCrgopes(envio)
-      _       <- test(crgopes.get.estado == Finalizado)
+      _       <- test(crgopes.get.estado should === (Finalizado))
     } yield ()
 
     programa.foldMap(toState).exec(inicial)
