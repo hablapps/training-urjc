@@ -57,7 +57,8 @@ class CirbeSpec extends FlatSpec with Matchers {
       _ <- validar(id2: Id[DB020])
     } yield ()
 
-    val resultado = programa.foldMap(toState).exec(inicial)
+    val resultado =
+      programa.foldMap(toState).exec(inicial) | fail("No se esperaba un error")
 
     resultado.db010s(id1).errores shouldBe List()
     resultado.db020s(id2).errores shouldBe List(R2008)
@@ -93,7 +94,8 @@ class CirbeSpec extends FlatSpec with Matchers {
       _     <- validar(id2: Id[DB020])
     } yield ()
 
-    val resultado = programa.foldMap(toState).exec(inicial)
+    val resultado =
+      programa.foldMap(toState).exec(inicial) | fail("No se esperaba un error")
 
     val esperado = inicial.copy(
       db020s = Map("DB020_ABCD" -> DB020(
@@ -172,8 +174,6 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val programa = declarar(DB020(Operacion("ABCD", V40, ZZZ)), crgopes)
 
-    intercept[Exception] {
-      programa.foldMap(toState).exec(inicial)
-    }
+    programa.foldMap(toState).exec(inicial).swap | fail("Se esperaba un error")
   }
 }

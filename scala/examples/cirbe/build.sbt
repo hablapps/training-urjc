@@ -10,4 +10,4 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % "2.11.7",
   "org.scalacheck" %% "scalacheck" % "1.12.5" % "test")
 
-scalacOptions ++= Seq("-unchecked", "-deprecation")
+scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
