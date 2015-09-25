@@ -43,35 +43,33 @@ object StateInterpreter {
   }
 
   type StateCirbe[A] = State[Estado, A]
-  type ErrorString[A] = String \/ A
-  type StateXCirbe[F[_], B] = StateT[F, Estado, B]
-  type StateErrorCirbe[A] = StateXCirbe[ErrorString, A]
-  val m = implicitly[Monad[StateErrorCirbe]]
+  type EitherString[A] = String \/ A
+  type StateXCirbe[F[_], A] = StateT[F, Estado, A]
+  type StateErrorCirbe[A] = StateXCirbe[EitherString, A]
+  val m =  implicitly[Monad[StateErrorCirbe]]
   val mt = implicitly[MonadTrans[StateXCirbe]]
 
   def toState = new (InstruccionCrgopes ~> StateErrorCirbe) {
     def apply[A](ins: InstruccionCrgopes[A]): StateErrorCirbe[A] = ins match {
       case PutRegistro(registro, crgopes_id) => for {
-        estado <- get[Estado].lift[ErrorString]
+        estado <- get[Estado].lift[EitherString]
         estado2 = registro match {
           case (r: DB010) => estado.addDB010(r, crgopes_id)
           case (r: DB020) => estado.addDB020(r, crgopes_id)
           case (_: Finalizar) => estado.finalizar(crgopes_id)
         }
-        _ <- put(estado2).lift[ErrorString]
+        _ <- put(estado2).lift[EitherString]
       } yield registro.id
-      case Fallar(mensaje) => {
-        mt.liftMU(mensaje.left).asInstanceOf[StateErrorCirbe[A]]
-      }
+      case Fallar(mensaje) => mt.liftMU[EitherString[A]](mensaje.left)
       case GetCrgopes(crgopes_id) => for {
-        estado <- get[Estado].lift[ErrorString]
+        estado <- get[Estado].lift[EitherString]
       } yield estado.crgopes.get(crgopes_id)
       case ins@GetRegistro(registro_id) => registro_id match {
         case (id: Id[DB010]) if ins.typeTag.tpe <:< typeOf[DB010] => {
-          get.lift[ErrorString].map(_.db010s(registro_id).asInstanceOf[A])
+          get.lift[EitherString].map(_.db010s(registro_id).asInstanceOf[A])
         }
         case (id: Id[DB020]) if ins.typeTag.tpe <:< typeOf[DB020] => {
-          get.lift[ErrorString].map(_.db020s(registro_id).asInstanceOf[A])
+          get.lift[EitherString].map(_.db020s(registro_id).asInstanceOf[A])
         }
       }
       case Remitir(rs) => {
@@ -81,7 +79,7 @@ object StateInterpreter {
       case SolicitarConfirmacion(_) => m.point(true)
       case ins@Validar(r, v) => r match {
         case (r: Id[DB010]) if ins.typeTag.tpe <:< typeOf[DB010] => for {
-          estado <- get[Estado].lift[ErrorString]
+          estado <- get[Estado].lift[EitherString]
           registro = estado.db010s(r)
           resultado = v.run(registro)
           _ <- resultado match {
@@ -90,12 +88,12 @@ object StateInterpreter {
               val registro2 = registro.copy(errores = errs.toList)
               val estado2 = estado.copy(
                 db010s = estado.db010s.updated(r, registro2))
-              put(estado2).lift[ErrorString]
+              put(estado2).lift[EitherString]
             }
           }
         } yield resultado
         case (r: Id[DB020]) if ins.typeTag.tpe <:< typeOf[DB020] => for {
-          estado <- get[Estado].lift[ErrorString]
+          estado <- get[Estado].lift[EitherString]
           registro = estado.db020s(r)
           resultado = v.run(registro)
           _ <- resultado match {
@@ -104,7 +102,7 @@ object StateInterpreter {
               val registro2 = registro.copy(errores = errs.toList)
               val estado2 = estado.copy(
                 db020s = estado.db020s.updated(r, registro2))
-              put(estado2).lift[ErrorString]
+              put(estado2).lift[EitherString]
             }
           }
         } yield resultado
