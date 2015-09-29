@@ -13,10 +13,13 @@ import com.hablapps.cirbe.proceso.crgopes.Crgopes._
 object GenInterpreter {
 
   case class Delta(
-    procesos: List[Id[Proceso]] = List.empty,
-    crgopes: List[Id[Crgopes]] = List.empty,
-    db010s: List[Id[DB010]] = List.empty,
-    db020s: List[Id[DB020]] = List.empty)
+      procesos: List[Id[Proceso]] = List.empty,
+      crgopes: List[Id[Crgopes]] = List.empty,
+      db010s: List[Id[DB010]] = List.empty,
+      db020s: List[Id[DB020]] = List.empty) {
+    def addProceso(proceso: Proceso) =
+      copy(procesos = proceso.nombre +: procesos)
+  }
 
   implicit val genMonad = new Functor[Gen] with Monad[Gen] {
     def point[A](a: => A): Gen[A] = a
@@ -27,6 +30,13 @@ object GenInterpreter {
     def condCat(cond: Boolean, q: List[A]): List[A] = if (cond) p ++ q else p
     def condCat(cond: Boolean, e: A): List[A] = condCat(cond, List(e))
   }
+
+  val genProceso: Gen[Proceso] = for {
+    nombre  <- arbitrary[String]
+    crgopes <- arbitrary[Option[Id[Crgopes]]]
+  } yield Proceso(nombre, crgopes)
+
+  implicit val arbitraryProceso: Arbitrary[Proceso] = Arbitrary(genProceso)
 
   implicit class ToGenHelper[A](programa: List[Precond]) {
 
@@ -44,9 +54,13 @@ object GenInterpreter {
       def toG(prog: List[Precond], delta: Delta): GP[Unit] = {
 
         val gens: List[GP[Unit]] =
-          List(unir(crearProceso(Proceso("201511")), toG(prog, delta)))
-            .condCat(prog.isEmpty, returns(()))
+          List(genProceso.flatMap { p =>
+            unir(crearProceso(p), toG(prog, delta.addProceso(p)))
+          })
+          // TODO: seguir añadiendo generadores en la lista (sobre todo, la cabecera del programa)
+          .condCat(prog.isEmpty, returns(()))
 
+        // FIXME: no es 'safe', va a cascar con 50% de probabilidad!
         oneOf(gens.head, gens.tail.head, gens.tail.tail:_*)
       }
 
