@@ -14,6 +14,12 @@ object Crgopes {
 
   sealed trait InstruccionCrgopes[A]
 
+  case class CrearProceso(proceso: Proceso)
+    extends InstruccionCrgopes[Id[Proceso]]
+
+  case class CrearCrgopes(crgopes: Crgopes, context: Id[Proceso])
+    extends InstruccionCrgopes[Id[Crgopes]]
+
   case class Fallar[A](mensaje: String)
     extends InstruccionCrgopes[A]
 
@@ -40,6 +46,12 @@ object Crgopes {
   // "Smart Constructors"
 
   def returns[A](a: A): ProgramaCrgopes[A] = Free.point(a)
+
+  def crearProceso(proceso: Proceso) =
+    Free.liftF[InstruccionCrgopes, Id[Proceso]](CrearProceso(proceso))
+
+  def crearCrgopes(crgopes: Crgopes, context: Id[Proceso]) =
+    Free.liftF[InstruccionCrgopes, Id[Crgopes]](CrearCrgopes(crgopes, context))
 
   def fallar[A](mensaje: String) =
     Free.liftF[InstruccionCrgopes, A](Fallar[A](mensaje))

@@ -45,8 +45,9 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val inicial = Estado(
       cirbe    = Cirbe(procesos = List(proceso)),
-      procesos = Map(proceso -> Proceso(crgopes)),
+      procesos = Map(proceso -> Proceso(proceso, crgopes)),
       crgopes  = Map(crgopes -> Crgopes(
+        nombre = crgopes,
         db010s = List(id1),
         db020s = List(id2))),
       db010s = Map(id1 -> DB010(Relacion("1234", "ABCD"))),
@@ -57,8 +58,8 @@ class CirbeSpec extends FlatSpec with Matchers {
       _ <- validar(id2: Id[DB020])
     } yield ()
 
-    val resultado =
-      programa.foldMap(toState).exec(inicial) | fail("No se esperaba un error")
+    val resultado = (programa.foldMap(toState).exec(inicial)
+      | fail("No se esperaba ningún error en la ejecución de este programa"))
 
     resultado.db010s(id1).errores shouldBe List()
     resultado.db020s(id2).errores shouldBe List(R2008)
@@ -82,8 +83,9 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val inicial = Estado(
       cirbe    = Cirbe(procesos = List(proceso)),
-      procesos = Map(proceso -> Proceso(crgopes)),
+      procesos = Map(proceso -> Proceso(proceso, crgopes)),
       crgopes  = Map(crgopes -> Crgopes(
+        nombre = crgopes,
         db010s = List(id1),
         db020s = List(id2))),
       db010s = Map(id1 -> DB010(Relacion("1234", "ABCD"))),
@@ -94,8 +96,8 @@ class CirbeSpec extends FlatSpec with Matchers {
       _     <- validar(id2: Id[DB020])
     } yield ()
 
-    val resultado =
-      programa.foldMap(toState).exec(inicial) | fail("No se esperaba un error")
+    val resultado = (programa.foldMap(toState).exec(inicial)
+      | fail("No se esperaba ningún error en la ejecución de este programa"))
 
     val esperado = inicial.copy(
       db020s = Map("DB020_ABCD" -> DB020(
@@ -125,8 +127,9 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val inicial = Estado(
       cirbe    = Cirbe(procesos = List(proceso)),
-      procesos = Map(proceso -> Proceso(crgopes)),
+      procesos = Map(proceso -> Proceso(proceso, crgopes)),
       crgopes  = Map(crgopes -> Crgopes(
+        nombre = crgopes,
         db010s = List(id1),
         db020s = List(id2))),
       db010s = Map(id1 -> DB010(Relacion("1234", "ABCD"))),
@@ -150,8 +153,8 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val inicial = Estado(
       cirbe    = Cirbe(procesos = List(envio)),
-      procesos = Map(envio -> Proceso(envio)),
-      crgopes  = Map(envio -> Crgopes(Activo)))
+      procesos = Map(envio -> Proceso(envio, envio)),
+      crgopes  = Map(envio -> Crgopes(envio, Activo)))
 
     val programa = for {
       _       <- finalizar(envio)
@@ -169,11 +172,32 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val inicial = Estado(
       cirbe    = Cirbe(procesos = List(proceso)),
-      procesos = Map(proceso -> Proceso(crgopes)),
-      crgopes  = Map(crgopes -> Crgopes(Finalizado)))
+      procesos = Map(proceso -> Proceso(proceso, crgopes)),
+      crgopes  = Map(crgopes -> Crgopes(crgopes, Finalizado)))
 
     val programa = declarar(DB020(Operacion("ABCD", V40, ZZZ)), crgopes)
 
-    programa.foldMap(toState).exec(inicial).swap | fail("Se esperaba un error")
+    (programa.foldMap(toState).exec(inicial).swap
+      | fail("Se esperaba que la ejecución del programa generase un error"))
+  }
+
+  it should "fallar con declaración finalizada (auto)" in {
+
+    import Precond._
+
+    val precond: PrecondDSL[Id[Proceso]] = for {
+      id <- requiereProceso(Option("201510"), _.crgopes == "201510")
+    } yield id
+
+    pending
+
+    // TODO: forall(precond.toGen) { inicial => ... }
+
+    val inicial = ???
+
+    val programa = declarar(DB020(Operacion("ABCD", V40, ZZZ)), "201510")
+
+    (programa.foldMap(toState).exec(inicial).swap
+      | fail("Se esperaba que la ejecución del programa generase un error"))
   }
 }

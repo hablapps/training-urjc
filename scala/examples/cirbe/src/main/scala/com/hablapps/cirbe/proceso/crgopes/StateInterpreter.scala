@@ -19,6 +19,22 @@ object StateInterpreter {
       db010s:   Map[Id[DB010], DB010] = Map(),
       db020s:   Map[Id[DB020], DB020] = Map()) {
 
+    def addProceso(proceso: Proceso): Estado = {
+      val id: Id[Proceso] = proceso.nombre
+      copy(
+        procesos = procesos + (id -> proceso),
+        cirbe = cirbe.copy(procesos = id :: cirbe.procesos))
+    }
+
+    def setCrgopes(value: Crgopes, proceso_id: Id[Proceso]): Estado = {
+      val id: Id[Crgopes] = value.nombre
+      val old = procesos(proceso_id)
+      val fresh = old.copy(crgopes = id)
+      copy(
+        crgopes = crgopes + (id -> value),
+        procesos = procesos.updated(proceso_id, fresh))
+    }
+
     def addDB010(db010: DB010, crgopes_id: Id[Crgopes]): Estado = {
       val old = crgopes(crgopes_id)
       val fresh = old.copy(db010s = db010.id +: old.db010s)
@@ -51,6 +67,14 @@ object StateInterpreter {
 
   def toState = new (InstruccionCrgopes ~> StateErrorCirbe) {
     def apply[A](ins: InstruccionCrgopes[A]): StateErrorCirbe[A] = ins match {
+      case CrearProceso(proceso) => for {
+        estado <- get[Estado].lift[EitherString]
+        _ <- put(estado.addProceso(proceso)).lift[EitherString]
+      } yield proceso.nombre
+      case CrearCrgopes(crgopes, proceso_id) => for {
+        estado <- get[Estado].lift[EitherString]
+        _ <- put(estado.setCrgopes(crgopes, proceso_id)).lift[EitherString]
+      } yield crgopes.nombre
       case PutRegistro(registro, crgopes_id) => for {
         estado <- get[Estado].lift[EitherString]
         estado2 = registro match {
