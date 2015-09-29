@@ -29,7 +29,7 @@ object StateInterpreter {
     def setCrgopes(value: Crgopes, proceso_id: Id[Proceso]): Estado = {
       val id: Id[Crgopes] = value.nombre
       val old = procesos(proceso_id)
-      val fresh = old.copy(crgopes = id)
+      val fresh = old.copy(crgopes = Option(id))
       copy(
         crgopes = crgopes + (id -> value),
         procesos = procesos.updated(proceso_id, fresh))

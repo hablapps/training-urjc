@@ -45,7 +45,7 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val inicial = Estado(
       cirbe    = Cirbe(procesos = List(proceso)),
-      procesos = Map(proceso -> Proceso(proceso, crgopes)),
+      procesos = Map(proceso -> Proceso(proceso, Option(crgopes))),
       crgopes  = Map(crgopes -> Crgopes(
         nombre = crgopes,
         db010s = List(id1),
@@ -83,7 +83,7 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val inicial = Estado(
       cirbe    = Cirbe(procesos = List(proceso)),
-      procesos = Map(proceso -> Proceso(proceso, crgopes)),
+      procesos = Map(proceso -> Proceso(proceso, Option(crgopes))),
       crgopes  = Map(crgopes -> Crgopes(
         nombre = crgopes,
         db010s = List(id1),
@@ -127,7 +127,7 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val inicial = Estado(
       cirbe    = Cirbe(procesos = List(proceso)),
-      procesos = Map(proceso -> Proceso(proceso, crgopes)),
+      procesos = Map(proceso -> Proceso(proceso, Option(crgopes))),
       crgopes  = Map(crgopes -> Crgopes(
         nombre = crgopes,
         db010s = List(id1),
@@ -153,7 +153,7 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val inicial = Estado(
       cirbe    = Cirbe(procesos = List(envio)),
-      procesos = Map(envio -> Proceso(envio, envio)),
+      procesos = Map(envio -> Proceso(envio, Option(envio))),
       crgopes  = Map(envio -> Crgopes(envio, Activo)))
 
     val programa = for {
@@ -172,7 +172,7 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val inicial = Estado(
       cirbe    = Cirbe(procesos = List(proceso)),
-      procesos = Map(proceso -> Proceso(proceso, crgopes)),
+      procesos = Map(proceso -> Proceso(proceso, Option(crgopes))),
       crgopes  = Map(crgopes -> Crgopes(crgopes, Finalizado)))
 
     val programa = declarar(DB020(Operacion("ABCD", V40, ZZZ)), crgopes)
@@ -183,15 +183,17 @@ class CirbeSpec extends FlatSpec with Matchers {
 
   it should "fallar con declaración finalizada (auto)" in {
 
-    import Precond._
+    import GenInterpreter._
 
-    val precond: PrecondDSL[Id[Proceso]] = for {
-      id <- requiereProceso(Option("201510"), _.crgopes == "201510")
-    } yield id
+    val preconds: List[Precond] = List(
+      RequiereProceso(Option("201510")),
+      RequiereCrgopes(Option("CRGOPES_201510"), Option("201510")))
 
     pending
 
     // TODO: forall(precond.toGen) { inicial => ... }
+
+    val generator = preconds.toGen
 
     val inicial = ???
 
