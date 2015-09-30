@@ -15,10 +15,10 @@ object GenInterpreter {
   case class Delta(
       procesos: List[Id[Proceso]] = List.empty,
       crgopes: List[Id[Crgopes]] = List.empty,
-      db010s: List[Id[DB010]] = List.empty,
-      db020s: List[Id[DB020]] = List.empty) {
-    def addProceso(proceso: Proceso) =
-      copy(procesos = proceso.nombre +: procesos)
+      registros: List[Id[Registro]] = List.empty) {
+    def addProceso(pro: Proceso) = copy(procesos = pro.nombre +: procesos)
+    def addCrgopes(crg: Crgopes) = copy(crgopes = crg.nombre +: crgopes)
+    def addRegistro(reg: Registro) = copy(registros = reg.id +: registros)
   }
 
   implicit val genMonad = new Functor[Gen] with Monad[Gen] {
@@ -33,10 +33,41 @@ object GenInterpreter {
 
   val genProceso: Gen[Proceso] = for {
     nombre  <- arbitrary[String]
-    crgopes <- arbitrary[Option[Id[Crgopes]]]
-  } yield Proceso(nombre, crgopes)
+  } yield Proceso(nombre)
 
   implicit val arbitraryProceso: Arbitrary[Proceso] = Arbitrary(genProceso)
+
+  val genCrgopes: Gen[Crgopes] = for {
+    nombre <- arbitrary[String]
+    // estado <- oneOf(Activo, Finalizado)
+  } yield Crgopes(nombre, Activo) // TODO: añadir información estado a delta
+
+  implicit val arbitraryCrgopes: Arbitrary[Crgopes] = Arbitrary(genCrgopes)
+
+  val genRelacion: Gen[Relacion] = for {
+    codigoOperacion <- arbitrary[String] suchThat (_.length > 4)
+    codigoTitular   <- arbitrary[String] suchThat (_.length > 4)
+  } yield Relacion(codigoOperacion, codigoTitular)
+
+  implicit val arbitraryRelacion: Arbitrary[Relacion] = Arbitrary(genRelacion)
+
+  val genOperacion: Gen[Operacion] = for {
+    codigo       <- arbitrary[String] suchThat (_.length > 4)
+    tipoProducto <- oneOf(V39, V40, V48, V54)
+    tipoRiesgo   <- ZZZ
+  } yield Operacion(codigo, tipoProducto, tipoRiesgo)
+
+  implicit val arbitraryOperacion: Arbitrary[Operacion] = Arbitrary(genOperacion)
+
+  val genDB010: Gen[DB010] = for {
+    relacion <- arbitrary[Relacion]
+  } yield DB010(relacion)
+
+  val genDB020: Gen[DB020] = for {
+    operacion <- arbitrary[Operacion]
+  } yield DB020(operacion)
+
+  val genRegistro: Gen[Registro] = oneOf(genDB010, genDB020)
 
   implicit class ToGenHelper[A](programa: List[Precond]) {
 
@@ -54,10 +85,31 @@ object GenInterpreter {
       def toG(prog: List[Precond], delta: Delta): GP[Unit] = {
 
         val gens: List[GP[Unit]] =
+          // Siempre es posible crear procesos
           List(genProceso.flatMap { p =>
-            unir(crearProceso(p), toG(prog, delta.addProceso(p)))
+            unir(
+              crearProceso(p),
+              toG(prog, delta.addProceso(p)))
           })
-          // TODO: seguir añadiendo generadores en la lista (sobre todo, la cabecera del programa)
+          // Existen procesos, luego podemos crear 'crgopes'
+          .condCat(delta.procesos.nonEmpty, genCrgopes flatMap { crg =>
+            oneOf(delta.procesos) flatMap { pro_id =>
+              unir(
+                crearCrgopes(crg, pro_id),
+                toG(prog, delta.addCrgopes(crg)))
+            }
+          })
+          // Existen crgopes, luego podemos crear 'db010s' o 'db020s'
+          .condCat(delta.crgopes.nonEmpty, genRegistro flatMap { reg =>
+            oneOf(delta.crgopes) flatMap {crg_id =>
+              unir(
+                putRegistro(reg, crg_id),
+                toG(prog, delta.addRegistro(reg)))
+            }
+          })
+          // Se cumple la precondición del usuario
+          .condCat(true, List.empty)
+          // Se cumplen todas las precondiciones, por tanto podemos finalizar
           .condCat(prog.isEmpty, returns(()))
 
         // FIXME: no es 'safe', va a cascar con 50% de probabilidad!
