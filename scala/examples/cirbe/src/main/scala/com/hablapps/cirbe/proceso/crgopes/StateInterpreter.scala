@@ -37,17 +37,17 @@ object StateInterpreter {
 
     def addDB010(db010: DB010, crgopes_id: Id[Crgopes]): Estado = {
       val old = crgopes(crgopes_id)
-      val fresh = old.copy(db010s = db010.id +: old.db010s)
+      val fresh = old.copy(db010s = db010.nombre +: old.db010s)
       copy(
-        db010s = db010s + (db010.id -> db010),
+        db010s = db010s + (db010.nombre -> db010),
         crgopes = crgopes.updated(crgopes_id, fresh))
     }
 
     def addDB020(db020: DB020, crgopes_id: Id[Crgopes]): Estado = {
       val old = crgopes(crgopes_id)
-      val fresh = old.copy(db020s = db020.id +: old.db020s)
+      val fresh = old.copy(db020s = db020.nombre +: old.db020s)
       copy(
-        db020s = db020s + (db020.id -> db020),
+        db020s = db020s + (db020.nombre -> db020),
         crgopes = crgopes.updated(crgopes_id, fresh))
     }
 
@@ -83,7 +83,7 @@ object StateInterpreter {
           case (_: Finalizar) => estado.finalizar(crgopes_id)
         }
         _ <- put(estado2).lift[EitherString]
-      } yield registro.id
+      } yield registro.nombre
       case Fallar(mensaje) => mt.liftMU[EitherString[A]](mensaje.left)
       case GetCrgopes(crgopes_id) => for {
         estado <- get[Estado].lift[EitherString]

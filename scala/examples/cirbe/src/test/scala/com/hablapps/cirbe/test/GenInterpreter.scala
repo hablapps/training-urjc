@@ -1,5 +1,7 @@
 package com.hablapps.cirbe.test
 
+import scala.language.implicitConversions
+
 import scalaz._, Scalaz._
 
 import org.scalacheck._
@@ -12,24 +14,17 @@ import com.hablapps.cirbe.proceso.crgopes.Crgopes._
 
 object GenInterpreter {
 
-  case class Delta(
-      procesos: List[Id[Proceso]] = List.empty,
-      crgopes: List[Id[Crgopes]] = List.empty,
-      registros: List[Id[Registro]] = List.empty) {
-    def addProceso(pro: Proceso) = copy(procesos = pro.nombre +: procesos)
-    def addCrgopes(crg: Crgopes) = copy(crgopes = crg.nombre +: crgopes)
-    def addRegistro(reg: Registro) = copy(registros = reg.id +: registros)
-  }
-
   implicit val genMonad = new Functor[Gen] with Monad[Gen] {
     def point[A](a: => A): Gen[A] = a
     def bind[A, B](fa: Gen[A])(f: A => Gen[B]): Gen[B] = fa flatMap f
   }
 
   implicit class listHelper[A](p: List[A]) {
-    def condCat(cond: Boolean, q: List[A]): List[A] = if (cond) p ++ q else p
-    def condCat(cond: Boolean, e: A): List[A] = condCat(cond, List(e))
+    def condCat(cond: Boolean, e: => A): List[A] = if (cond) e :: p else p
   }
+
+  implicit def unirPreconds[A](ps: List[A => Boolean]): A => Boolean =
+    a => ps.foldLeft(true)((acc, p) => acc && p(a))
 
   val genProceso: Gen[Proceso] = for {
     nombre  <- arbitrary[String]
@@ -39,8 +34,8 @@ object GenInterpreter {
 
   val genCrgopes: Gen[Crgopes] = for {
     nombre <- arbitrary[String]
-    // estado <- oneOf(Activo, Finalizado)
-  } yield Crgopes(nombre, Activo) // TODO: añadir información estado a delta
+    estado <- oneOf(Activo, Finalizado)
+  } yield Crgopes(nombre, estado)
 
   implicit val arbitraryCrgopes: Arbitrary[Crgopes] = Arbitrary(genCrgopes)
 
@@ -107,13 +102,58 @@ object GenInterpreter {
                 toG(prog, delta.addRegistro(reg)))
             }
           })
-          // Se cumple la precondición del usuario
-          .condCat(true, List.empty)
+          // Se cumplen la precondiciones del usuario
+          .condCat(
+            prog.headOption.fold(false)(_.cumple(delta)),
+            prog.head match {
+              case RequiereProceso(nom, pre) => {
+                genProceso.suchThat(pre) flatMap { pro =>
+                  val pro2 = pro.copy(nombre = nom.getOrElse(pro.nombre))
+                  unir(
+                    crearProceso(pro2),
+                    toG(prog.tail, delta.addProceso(pro2)))
+                }
+              }
+              case RequiereCrgopes(nom, ctx, pre) => {
+                genCrgopes.suchThat(pre) flatMap { crg =>
+                  oneOf(delta.procesos) flatMap { pro_id =>
+                    val crg2 = crg.copy(nombre = nom.getOrElse(crg.nombre))
+                    unir(
+                      crearCrgopes(crg2, ctx.getOrElse(pro_id)),
+                      toG(prog.tail, delta.addCrgopes(crg2)))
+                  }
+                }
+              }
+              case RequiereDB010(nom, ctx, pre) => {
+                genDB010.suchThat(pre) flatMap { db010 =>
+                  oneOf(delta.crgopes) flatMap { crg_id =>
+                    val db010_2 = db010.copy(nombre = nom.getOrElse(db010.nombre))
+                    unir(
+                      putRegistro(db010_2, ctx.getOrElse(crg_id)),
+                      toG(prog.tail, delta.addRegistro(db010_2)))
+                  }
+                }
+              }
+              case RequiereDB020(nom, ctx, pre) => {
+                genDB020.suchThat(pre) flatMap { db020 =>
+                  oneOf(delta.crgopes) flatMap { crg_id =>
+                    val db020_2 = db020.copy(nombre = nom.getOrElse(db020.nombre))
+                    unir(
+                      putRegistro(db020_2, ctx.getOrElse(crg_id)),
+                      toG(prog.tail, delta.addRegistro(db020_2)))
+                  }
+                }
+              }
+            }
+          )
           // Se cumplen todas las precondiciones, por tanto podemos finalizar
           .condCat(prog.isEmpty, returns(()))
 
-        // FIXME: no es 'safe', va a cascar con 50% de probabilidad!
-        oneOf(gens.head, gens.tail.head, gens.tail.tail:_*)
+        gens match {
+          case (x1::x2::xs) => oneOf(x1, x2, xs:_*)
+          case (x1::_) => x1
+          case _ => throw new Exception("Siempre tendremos al menos un generador")
+        }
       }
 
       toG(programa, Delta())

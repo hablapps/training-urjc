@@ -1,25 +1,20 @@
 package com.hablapps.cirbe.dominio
 
 sealed trait Registro {
-  def id: String
+  def nombre: String
   def errores: List[Error]
 }
 
 case class DB010(
-  relacion: Relacion,
-  errores: List[Error] = List())
-    extends Registro {
-  def id: Id[DB010] =
-    s"DB010_${relacion.codigoOperacion}_${relacion.codigoTitular}"
-}
+    relacion: Relacion,
+    nombre: String = "",
+    errores: List[Error] = List()) extends Registro
 
 case class DB020(
-  operacion: Operacion,
-  errores: List[Error] = List())
-    extends Registro {
-  def id: Id[DB020] = s"DB020_${operacion.codigo}"
-}
+    operacion: Operacion,
+    nombre: String = "",
+    errores: List[Error] = List()) extends Registro
 
 case class Finalizar(errores: List[Error] = List()) extends Registro {
-  def id: Id[Finalizar] = "Finalizar"
+  val nombre = "Finalizar"
 }

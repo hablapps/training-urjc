@@ -101,7 +101,7 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val esperado = inicial.copy(
       db020s = Map("DB020_ABCD" -> DB020(
-        Operacion("ABCD", V40, ZZZ), List(R2008))))
+        operacion = Operacion("ABCD", V40, ZZZ), errores = List(R2008))))
 
     resultado shouldBe esperado
   }
@@ -177,29 +177,7 @@ class CirbeSpec extends FlatSpec with Matchers {
 
     val programa = declarar(DB020(Operacion("ABCD", V40, ZZZ)), crgopes)
 
-    (programa.foldMap(toState).exec(inicial).swap
-      | fail("Se esperaba que la ejecución del programa generase un error"))
-  }
-
-  it should "fallar con declaración finalizada (auto)" in {
-
-    import GenInterpreter._
-
-    val preconds: List[Precond] = List(
-      RequiereProceso(Option("201510")),
-      RequiereCrgopes(Option("CRGOPES_201510"), Option("201510")))
-
-    pending
-
-    // TODO: forall(precond.toGen) { inicial => ... }
-
-    val generator = preconds.toGen
-
-    val inicial = ???
-
-    val programa = declarar(DB020(Operacion("ABCD", V40, ZZZ)), "201510")
-
-    (programa.foldMap(toState).exec(inicial).swap
+    (programa.foldMap(toState).exec(Estado()).swap
       | fail("Se esperaba que la ejecución del programa generase un error"))
   }
 }
