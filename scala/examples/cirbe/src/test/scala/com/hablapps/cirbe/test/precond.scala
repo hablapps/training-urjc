@@ -1,50 +1,43 @@
 package com.hablapps.cirbe.test
 
+import scala.language.higherKinds
+
 import scalaz._, Scalaz._
 
-import com.hablapps.cirbe.dominio._
-import com.hablapps.cirbe.dominio.Id
-import com.hablapps.cirbe.proceso.crgopes._
-import com.hablapps.cirbe.proceso.crgopes.Crgopes._
+import org.scalacheck._
 
-sealed trait Precond {
+object Precond {
 
-  private def check[A](ctx: Option[A], p: List[A]) =
-    p.nonEmpty && ctx.fold(true)(p.contains(_))
+  sealed trait PrecondIns[A]
 
-  def cumple(delta: Delta): Boolean = this match {
-    case RequiereProceso(_, _)      => true
-    case RequiereCrgopes(_, ctx, _) => check(ctx, delta.procesos)
-    case RequiereDB010(_, ctx, _)   => check(ctx, delta.crgopes)
-    case RequiereDB020(_, ctx, _)   => check(ctx, delta.crgopes)
+  case class Demand[F[_], A](ins: F[A]) extends PrecondIns[Free[F, A]]
+
+  case class Ensure[F[_], A](query: Free[F, A], matcher: A => Unit)
+      extends PrecondIns[Free[F, Unit]]
+
+  type Precond[A] = Free[PrecondIns, A]
+
+  def demand[F[_], A](i: F[A]): Precond[Free[F, A]] =
+    Free.liftF[PrecondIns, Free[F, A]](Demand(i))
+
+  def ensure[F[_], A](q: Free[F, A])(m: A => Unit): Precond[Free[F, Unit]] =
+    Free.liftF[PrecondIns, Free[F, Unit]](Ensure(q, m))
+
+  def toFreeFA[F[_]] = {
+    type FreeF[A] = ({type FreeF[A] = Free[F, A]})#FreeF[A]
+    new (PrecondIns ~> FreeF) {
+      def apply[A](ins: PrecondIns[A]): FreeF[A] = ins match {
+        case Demand(ins2: F[A]) => Free.liftF(ins2)
+        //case Ensure(query: Free[F, A], matcher) => ???
+        case _ => ???
+      }
+    }
   }
-}
 
-case class RequiereProceso(
-  nombre: Option[String] = None,
-  preconds: List[Proceso => Boolean] = List()) extends Precond
-
-case class RequiereCrgopes(
-  nombre: Option[String] = None,
-  context: Option[Id[Proceso]] = None,
-  preconds: List[Crgopes => Boolean] = List()) extends Precond
-
-case class RequiereDB010(
-  nombre: Option[String] = None,
-  context: Option[Id[Crgopes]] = None,
-  // TODO: Integrar con validaciones!
-  preconds: List[DB010 => Boolean] = List()) extends Precond
-
-case class RequiereDB020(
-  nombre: Option[String] = None,
-  context: Option[Id[Crgopes]] = None,
-  preconds: List[DB020 => Boolean] = List()) extends Precond
-
-case class Delta(
-    procesos: List[Id[Proceso]] = List.empty,
-    crgopes: List[Id[Crgopes]] = List.empty,
-    registros: List[Id[Registro]] = List.empty) {
-  def addProceso(pro: Proceso) = copy(procesos = pro.nombre +: procesos)
-  def addCrgopes(crg: Crgopes) = copy(crgopes = crg.nombre +: crgopes)
-  def addRegistro(reg: Registro) = copy(registros = reg.nombre +: registros)
+  // def toId = new (PrecondIns ~> Id) {
+  //   def apply[A](ins: PrecondIns[A]): Id[A] = ins match {
+  //     case Demand(ins2) => Free.liftF(ins2)
+  //     case Ensure(query, matcher) => ??? // XXX: necesito un `test` genérico!
+  //   }
+  // }
 }
